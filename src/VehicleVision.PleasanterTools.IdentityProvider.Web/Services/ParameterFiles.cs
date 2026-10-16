@@ -87,9 +87,7 @@ public static class ParameterFiles
         // JSON の側（AddJsonFile）は content root を基準にするが、
         // 別名を写すために自分で読む側は現在のディレクトリを基準にする。
         // **基準が食い違うと、片方だけ読めて気付けない**（実際に踏んだ）
-        var resolved = Path.IsPathRooted(directory)
-            ? directory
-            : Path.Combine(BasePathOf(builder), directory);
+        var resolved = ResolveDirectory(BasePathOf(builder), directory);
 
         // ---- 1. {名前}.json（一番弱い）
         foreach (var name in Names)
@@ -135,6 +133,30 @@ public static class ParameterFiles
                 }
             }
         }
+    }
+
+    /// <summary>設定ファイルの置き場を決める。</summary>
+    /// <remarks>
+    /// **content root にあればそこ、無ければ実行ファイルの隣（<c>bin/…/App_Data/Parameters</c>）。**
+    /// <c>dotnet run</c> の content root はプロジェクトのフォルダで、既定値の JSON はビルドで実行ファイルの隣へ
+    /// 複写される（<c>.csproj</c> の <c>Content</c>）ため、どちらからでも読めるようにする。
+    /// 配布物（publish・コンテナ）では両者が同じ場所になる。
+    /// </remarks>
+    public static string ResolveDirectory(string contentRoot, string directory)
+    {
+        if (Path.IsPathRooted(directory))
+        {
+            return directory;
+        }
+
+        var inContentRoot = Path.Combine(contentRoot, directory);
+        if (Directory.Exists(inContentRoot))
+        {
+            return inContentRoot;
+        }
+
+        var besideExecutable = Path.Combine(AppContext.BaseDirectory, directory);
+        return Directory.Exists(besideExecutable) ? besideExecutable : inContentRoot;
     }
 
     /// <summary>相対パスの基準。**content root に合わせる。**</summary>

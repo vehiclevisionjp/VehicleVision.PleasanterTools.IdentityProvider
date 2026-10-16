@@ -9,16 +9,18 @@ public sealed partial record AdminPathOptions(string Path)
     public const string DefaultPath = "/admin";
     public const int MaximumLength = 64;
 
+    /// <summary>既存の経路と衝突する名前。管理画面の入口には使えない。</summary>
     private static readonly HashSet<string> ReservedPaths = new(StringComparer.Ordinal)
     {
         "/api",
         "/assets",
-        "/f",
-        "/fonts",
         "/healthz",
-        "/openapi",
+        "/idp-assets",
+        "/login",
+        "/logout",
+        "/oidc",
         "/ready",
-        "/scalar",
+        "/saml",
     };
 
     /// <summary>外部設定を読み、管理画面の入口として使えることを確かめる。</summary>

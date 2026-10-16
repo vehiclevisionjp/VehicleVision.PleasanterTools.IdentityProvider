@@ -3,7 +3,7 @@ using System.Text.Encodings.Web;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Web;
 
-/// <summary>画面の入口の HTML（<c>index.html</c> / <c>admin.html</c>）へ、配置先の経路を埋めて返す。</summary>
+/// <summary>管理画面の入口の HTML（<c>admin.html</c>）へ、配置先の経路を埋めて返す。</summary>
 /// <remarks>
 /// <para>
 /// **画面を組み立て直さずに、配置先のサブパスを変えられるようにする**。
@@ -33,7 +33,6 @@ public sealed class HtmlShell(IWebHostEnvironment environment, AdminPathOptions 
     /// <summary>管理画面の入口（サブパス込み）を埋める印。</summary>
     public const string AdminPathPlaceholder = "__IDP_ADMIN_PATH__";
 
-    public const string IndexFile = "index.html";
     public const string AdminFile = "admin.html";
 
     private readonly ConcurrentDictionary<string, Lazy<string?>> templates = new(StringComparer.Ordinal);
@@ -42,13 +41,6 @@ public sealed class HtmlShell(IWebHostEnvironment environment, AdminPathOptions 
     /// 差し替えた結果。**PathBase ごとに 1 つ。** PathBase は配置で決まるので、実際には 1 つか 2 つしか出来ない。
     /// </summary>
     private readonly ConcurrentDictionary<(string File, string PathBase), string?> rendered = new();
-
-    /// <summary>入口の HTML（index.html）。**置かれていなければ <c>null</c>。**</summary>
-    public string? Index(HttpContext context)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        return Render(IndexFile, context.Request.PathBase);
-    }
 
     /// <summary>管理画面の入口。**置かれていなければ <c>null</c>。**</summary>
     public string? Admin(HttpContext context)

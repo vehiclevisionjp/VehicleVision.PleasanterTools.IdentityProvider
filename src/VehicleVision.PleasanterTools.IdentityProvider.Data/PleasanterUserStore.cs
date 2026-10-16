@@ -79,15 +79,27 @@ public sealed class PleasanterUserStore(IPleasanterConnectionFactory connectionF
         }
 
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        var trimmed = loginId.Trim();
 
+        // **まず、入力のまま比べる。** 索引が使える。大文字小文字の扱いは DB の照合順序に従う
+        // （SQL Server は既定で区別せず、PostgreSQL は区別する。Pleasanter 本体のログインと同じ）。
+        // **見つからなければ、小文字にして比べ直す。** どの RDBMS でも大文字小文字を区別せずに入れるようにするため。
+        // 後者は表の走査になるが、実在しない ID の試みは IP ごとのレート制限とログイン ID ごとの締め出しで絞られる。
         // **同じログイン ID が複数あれば、テナント ID の若い方。** Pleasanter も先頭を採る
-        var rows = await connection.QueryAsync<PleasanterUser>(Sql(
-            "SELECT " + UserColumns + " FROM [Users] WHERE LOWER([LoginId]) = @LoginId "
-            + "ORDER BY [TenantId], [UserId]",
-            new { LoginId = loginId.Trim().ToLowerInvariant() },
+        var exact = await connection.QueryAsync<PleasanterUser>(Sql(
+            "SELECT " + UserColumns + " FROM [Users] WHERE [LoginId] = @LoginId ORDER BY [TenantId], [UserId]",
+            new { LoginId = trimmed },
             cancellationToken: cancellationToken)).ConfigureAwait(false);
+        if (exact.FirstOrDefault() is { } found)
+        {
+            return found;
+        }
 
-        return rows.FirstOrDefault();
+        var folded = await connection.QueryAsync<PleasanterUser>(Sql(
+            "SELECT " + UserColumns + " FROM [Users] WHERE LOWER([LoginId]) = @LoginId ORDER BY [TenantId], [UserId]",
+            new { LoginId = trimmed.ToLowerInvariant() },
+            cancellationToken: cancellationToken)).ConfigureAwait(false);
+        return folded.FirstOrDefault();
     }
 
     public async Task<PleasanterUser?> FindByUserIdAsync(

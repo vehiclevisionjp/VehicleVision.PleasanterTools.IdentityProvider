@@ -150,6 +150,15 @@ public sealed class SamlIdpService(SigningKeyService keys, IdpOptions options)
             }
         }
 
+        // **属性が 1 つも無い SP（NameID だけを使う SP）がある。** ライブラリは属性の無い
+        // AttributeStatement を書けず（IDX13129。実際に 500 になった）、ClaimsIdentity を空にしても
+        // null にしても落ちる。**属性が 1 つも要らない SP には、ログイン ID を `loginId` として 1 つだけ載せる**
+        // （属性は無視するのが SP の普通の作りで、害は無い）
+        if (claims.Count == 0)
+        {
+            claims.Add(new Claim("loginId", profile.User.LoginId));
+        }
+
         response.ClaimsIdentity = new ClaimsIdentity(claims);
 
         // 多要素なら、その旨を認証コンテキストで SP へ伝える

@@ -148,8 +148,9 @@ public sealed class AuditLogStore(IDbConnectionFactory connectionFactory)
 
         if (!string.IsNullOrWhiteSpace(query.Actor))
         {
-            conditions.Add($"[ActorLoginId] LIKE @ActorLike ESCAPE '{SqlDialect.LikeEscape}'");
-            parameters.Add("ActorLike", $"%{SqlDialect.EscapeLike(query.Actor.Trim())}%");
+            // **大文字小文字を区別しない**（PostgreSQL の LIKE は区別するので、両辺を小文字にして揃える）
+            conditions.Add($"LOWER([ActorLoginId]) LIKE @ActorLike ESCAPE '{SqlDialect.LikeEscape}'");
+            parameters.Add("ActorLike", $"%{SqlDialect.EscapeLike(query.Actor.Trim().ToLowerInvariant())}%");
         }
 
         if (query.FailedOnly)
@@ -159,8 +160,8 @@ public sealed class AuditLogStore(IDbConnectionFactory connectionFactory)
 
         if (!string.IsNullOrWhiteSpace(query.ActionContains))
         {
-            conditions.Add($"[Action] LIKE @ActionLike ESCAPE '{SqlDialect.LikeEscape}'");
-            parameters.Add("ActionLike", $"%{SqlDialect.EscapeLike(query.ActionContains.Trim())}%");
+            conditions.Add($"LOWER([Action]) LIKE @ActionLike ESCAPE '{SqlDialect.LikeEscape}'");
+            parameters.Add("ActionLike", $"%{SqlDialect.EscapeLike(query.ActionContains.Trim().ToLowerInvariant())}%");
         }
 
         var where = conditions.Count == 0 ? string.Empty : "WHERE " + string.Join(" AND ", conditions) + " ";

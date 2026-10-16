@@ -66,7 +66,8 @@ ConnectionSecurity.EnsureSecure(
 ConnectionSecurity.EnsureSecure(
     pleasanterProvider,
     pleasanterConnectionString,
-    allowInsecure: string.Equals(builder.Configuration["IDP_PLEASANTER_DB_ALLOW_INSECURE"], "true", StringComparison.OrdinalIgnoreCase));
+    allowInsecure: string.Equals(builder.Configuration["IDP_PLEASANTER_DB_ALLOW_INSECURE"], "true", StringComparison.OrdinalIgnoreCase),
+    allowSetting: "IDP_PLEASANTER_DB_ALLOW_INSECURE");
 
 // **マイグレーションを手動で当てる口も残す。** 当てる道具を別に作らない
 if (MigrationCommand.IsRequested(args))

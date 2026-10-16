@@ -1,34 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "//": [
-    "デバッグ起動（F5）に要る最小限の設定を入れてある（Issue #407）。",
-    "何も設定せずに起動すると IDP_SECRET_KEY が無くて落ちるため。",
+    "デバッグ起動（F5・dotnet run）に要る最小限の設定を入れてある。",
+    "何も設定せずに起動すると IDP_SECRET_KEY などが無くて落ちるため。",
     "⚠️ このファイルは Development 専用で、本番の構成では読まれない。",
-    "IDP_SECRET_KEY は開発用の固定値であって本番の資格情報ではない。",
-    "compose.yaml の DEV_SECRET_KEY と同じ値にしてあるので、",
-    "検証環境で作ったデータ（2 要素・送信待ちのメール）を手元の実行でも読める。",
-    "Pleasanter の接続は入れない。未設定でも起動でき、管理画面から設定できる（#388）。"
+    "入っている値は検証環境（compose.yaml）用の固定値で、本番の資格情報ではない。",
+    "IDP_SECRET_KEY は compose.yaml の DEV_SECRET_KEY と同じ値にしてあるので、検証環境で作ったデータ（署名鍵）を手元の実行でも読める。",
+    "先に `docker compose up -d --wait`（Pleasanter と SQL Server）を実行しておくこと。",
+    "IdP 自身の DB は手元では SQLite（App_Data/idp.db）。SQL Server / PostgreSQL / MySQL で試すときは .vscode/launch.json の構成を使う。",
+    "IDP_ADMIN_ROLE は TenantManager にしてある（Pleasanter の既定の管理者 Administrator は ServiceManager を持たないため）。",
+    "ポート 5067 は Frontend の vite.config.ts（開発サーバの /api の中継先）と合わせてある。"
   ],
   "profiles": {
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
+      "launchUrl": "admin",
       "applicationUrl": "http://localhost:5067",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
+        "TZ": "Asia/Tokyo",
+        "IDP_ISSUER": "http://localhost:5067",
         "IDP_DB_PROVIDER": "Sqlite",
-        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:7232;http://localhost:5067",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "IDP_DB_PROVIDER": "Sqlite",
+        "IDP_PLEASANTER_DB_PROVIDER": "SqlServer",
+        "IDP_PLEASANTER_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
+        "IDP_PLEASANTER_DB_ALLOW_INSECURE": "true",
+        "IDP_ADMIN_ROLE": "TenantManager",
         "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
       }
     }

@@ -180,7 +180,24 @@ public sealed class M0001_InitialSchema : Migration
 
         Create.Index("IX_AuditLogs_OccurredAt")
             .OnTable("AuditLogs").OnColumn("OccurredAt").Descending();
+
+        // ⚠️ **MySQL は表の文字集合を utf8mb4 へ揃える。**
+        // FluentMigrator が作る表は、データベースや接続の既定が utf8mb4 でも utf8mb3（3 バイト）になり、
+        // **絵文字や一部の漢字（4 バイト文字）を保存すると失敗する**（実機で確認）。
+        // 照合順序は `utf8mb4_bin`（大文字小文字・アクセントを区別する）にする。
+        // クライアント ID やエンティティ ID は大文字小文字を区別して比べるもので、PostgreSQL と揃う
+        foreach (var table in Tables)
+        {
+            IfDatabase(database => database.StartsWith("MySql", StringComparison.OrdinalIgnoreCase))
+                .Execute.Sql($"ALTER TABLE `{table}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin");
+        }
     }
+
+    private static readonly string[] Tables =
+    [
+        "OidcClients", "SamlProviders", "SigningKeys", "SsoSessions", "SessionParticipants", "AuthorizationCodes",
+        "RefreshTokens", "LoginFailures", "TotpUsedSteps", "PendingRequests", "AuditLogs",
+    ];
 
     public override void Down()
     {

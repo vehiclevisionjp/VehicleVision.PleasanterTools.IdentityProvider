@@ -177,7 +177,7 @@ public sealed class SsoSessionStore(IDbConnectionFactory connectionFactory)
     {
         var filter = string.IsNullOrWhiteSpace(loginId)
             ? string.Empty
-            : $" AND [LoginId] LIKE @LoginLike ESCAPE '{SqlDialect.LikeEscape}'";
+            : $" AND LOWER([LoginId]) LIKE @LoginLike ESCAPE '{SqlDialect.LikeEscape}'";
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         var rows = await connection.QueryAsync<Row>(Sql(
             "SELECT " + Columns + " FROM [SsoSessions] WHERE [RevokedAt] IS NULL AND [ExpiresAt] > @Now "
@@ -187,7 +187,7 @@ public sealed class SsoSessionStore(IDbConnectionFactory connectionFactory)
             {
                 Now = Db(nowUtc),
                 IdleLimit = Db(nowUtc - idleTimeout),
-                LoginLike = string.IsNullOrWhiteSpace(loginId) ? null : $"%{SqlDialect.EscapeLike(loginId.Trim())}%",
+                LoginLike = string.IsNullOrWhiteSpace(loginId) ? null : $"%{SqlDialect.EscapeLike(loginId.Trim().ToLowerInvariant())}%",
                 Limit = limit,
                 Offset = offset,
             },

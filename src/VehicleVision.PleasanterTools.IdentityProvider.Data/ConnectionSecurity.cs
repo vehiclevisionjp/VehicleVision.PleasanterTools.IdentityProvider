@@ -155,7 +155,8 @@ public static class ConnectionSecurity
     public static void EnsureSecure(
         DatabaseProvider provider,
         string connectionString,
-        bool allowInsecure)
+        bool allowInsecure,
+        string allowSetting = "IDP_DB_ALLOW_INSECURE")
     {
         var problems = Inspect(provider, connectionString);
         if (problems.Count == 0 || allowInsecure)
@@ -166,6 +167,6 @@ public static class ConnectionSecurity
         throw new InvalidOperationException(
             "DB への接続が暗号化されていない、または相手を確かめていない: "
             + string.Join(" / ", problems.Select(problem => problem.Reason))
-            + "。検証環境で意図して緩めるなら IDP_DB_ALLOW_INSECURE=true を設定する");
+            + $"。検証環境で意図して緩めるなら {allowSetting}=true を設定する");
     }
 }

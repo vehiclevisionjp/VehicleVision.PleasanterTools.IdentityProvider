@@ -21,6 +21,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- 設定ファイルの既定値（App_Data/Parameters/*.json）を、ビルドと publish の出力へ写す。
+       **{名前}.local.json は写さない**（実値が入り得る。git 管理外） -->
+  <ItemGroup>
+    <Content Include="..\..\App_Data\Parameters\*.json"
+             Exclude="..\..\App_Data\Parameters\*.local.json"
+             Link="App_Data\Parameters\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="VehicleVision.PleasanterTools.IdentityProvider.Web.Tests" />
     <InternalsVisibleTo Include="VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests" />

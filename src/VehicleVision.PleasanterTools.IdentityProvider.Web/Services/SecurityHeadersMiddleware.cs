@@ -25,10 +25,14 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
     {
         var headers = context.Response.Headers;
         headers["X-Content-Type-Options"] = "nosniff";
-        headers["Referrer-Policy"] = "no-referrer";
+        // ⚠️ **`no-referrer` にしない。** ブラウザは `Referrer-Policy: no-referrer` のとき、
+        // 同じオリジンへのフォーム送信でも `Origin: null` を送る（Fetch 標準）。
+        // CSRF の検査（`CsrfGuard`）が `Origin` を見るので、**ログインの POST が全て断られる**
+        // （実ブラウザで確認）。`same-origin` なら、同じオリジンへは本来の `Origin` を送り、
+        // 他所（SP・RP）へは何も送らない
+        headers["Referrer-Policy"] = "same-origin";
         headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()";
         headers["Content-Security-Policy"] = ContentSecurityPolicy;
-        headers["Cross-Origin-Opener-Policy"] = "same-origin";
 
         context.Response.OnStarting(() =>
         {
