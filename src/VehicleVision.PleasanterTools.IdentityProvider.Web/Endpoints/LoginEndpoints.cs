@@ -23,9 +23,10 @@ public static class LoginEndpoints
 
     public static IEndpointRouteBuilder MapLoginEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet(HtmlPages.CssPath, () => Results.Text(HtmlPages.Css, "text/css; charset=utf-8"))
+        // 中身が変わらない資産は、短く持たせてよい（既定は no-store）
+        app.MapGet(HtmlPages.CssPath, (HttpContext http) => Asset(http, HtmlPages.Css, "text/css; charset=utf-8"))
             .ExcludeFromDescription();
-        app.MapGet(HtmlPages.PostScriptPath, () => Results.Text(HtmlPages.PostScript, "text/javascript; charset=utf-8"))
+        app.MapGet(HtmlPages.PostScriptPath, (HttpContext http) => Asset(http, HtmlPages.PostScript, "text/javascript; charset=utf-8"))
             .ExcludeFromDescription();
 
         app.MapGet("/login", ShowLoginAsync).ExcludeFromDescription();
@@ -236,6 +237,12 @@ public static class LoginEndpoints
         }
 
         return Html(HtmlPages.Message(language, BasePath(http), UiText.Of(language, UiText.LogoutTitle), UiText.Of(language, UiText.LoggedOut), BasePath(http) + "/login"));
+    }
+
+    private static IResult Asset(HttpContext http, string content, string contentType)
+    {
+        http.Response.Headers.CacheControl = "public, max-age=3600";
+        return Results.Text(content, contentType);
     }
 
     internal static string Language(HttpContext http) => UiText.Resolve(http.Request.Headers.AcceptLanguage.ToString());

@@ -452,6 +452,61 @@ public class OidcEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
     }
 
     [Fact]
+    public async Task ブラウザ上のRPのためにCORSを付けるが登録のないオリジンには付けない()
+    {
+        using var admin = await E2E.AdminAsync(idp);
+        var (_, _) = await E2E.CreateClientAsync(admin, clientType: "public");
+        using var browser = idp.NewBrowser();
+
+        async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string origin, bool preflight)
+        {
+            using var request = new HttpRequestMessage(method, path);
+            request.Headers.Add("Origin", origin);
+            if (preflight)
+            {
+                request.Headers.Add("Access-Control-Request-Method", "POST");
+                request.Headers.Add("Access-Control-Request-Headers", "authorization");
+            }
+
+            return await browser.Http.SendAsync(request);
+        }
+
+        static string? AllowOrigin(HttpResponseMessage response) =>
+            response.Headers.TryGetValues("Access-Control-Allow-Origin", out var values) ? values.Single() : null;
+
+        // ディスカバリと JWKS は公開の情報。誰にでも読ませる
+        using var discovery = await SendAsync(HttpMethod.Get, "/.well-known/openid-configuration", "https://anything.example.com", preflight: false);
+        Assert.Equal("*", AllowOrigin(discovery));
+        using var jwks = await SendAsync(HttpMethod.Get, "/oidc/jwks", "https://anything.example.com", preflight: false);
+        Assert.Equal("*", AllowOrigin(jwks));
+
+        // トークンのプリフライト: 登録されたクライアントのリダイレクト URI のオリジンだけ
+        using var allowed = await SendAsync(HttpMethod.Options, "/oidc/token", "https://app.example.com", preflight: true);
+        Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
+        Assert.Equal("https://app.example.com", AllowOrigin(allowed));
+        Assert.Contains("POST", string.Join(',', allowed.Headers.GetValues("Access-Control-Allow-Methods")), StringComparison.Ordinal);
+        Assert.Contains("Authorization", string.Join(',', allowed.Headers.GetValues("Access-Control-Allow-Headers")), StringComparison.Ordinal);
+        Assert.False(allowed.Headers.Contains("Access-Control-Allow-Credentials"));
+
+        using var denied = await SendAsync(HttpMethod.Options, "/oidc/token", "https://evil.example.com", preflight: true);
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.Null(AllowOrigin(denied));
+
+        // 本要求でも同じ
+        using var tokenFromAllowed = await SendAsync(HttpMethod.Post, "/oidc/token", "https://app.example.com", preflight: false);
+        Assert.Equal("https://app.example.com", AllowOrigin(tokenFromAllowed));
+        using var tokenFromEvil = await SendAsync(HttpMethod.Post, "/oidc/token", "https://evil.example.com", preflight: false);
+        Assert.Null(AllowOrigin(tokenFromEvil));
+
+        // ログイン・管理 API・SAML には付けない（ナビゲーションで使うか、同じオリジンだけで使う）
+        foreach (var path in new[] { "/login", "/api/admin/me", "/saml/sso", "/oidc/authorize" })
+        {
+            using var other = await SendAsync(HttpMethod.Get, path, "https://app.example.com", preflight: false);
+            Assert.Null(AllowOrigin(other));
+        }
+    }
+
+    [Fact]
     public async Task 署名鍵をローテーションしても発行済みのIDトークンは検証できる()
     {
         using var admin = await E2E.AdminAsync(idp);

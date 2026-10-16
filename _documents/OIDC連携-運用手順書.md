@@ -96,6 +96,13 @@ UserInfo を引く。
 curl -s -H "Authorization: Bearer ACCESS_TOKEN" {Issuer}/oidc/userinfo
 ```
 
+### ブラウザ上の RP（SPA）
+
+トークン・UserInfo・失効のエンドポイントは、**登録したクライアントのリダイレクト URI と同じオリジン**からの
+ブラウザの呼び出し（CORS）を許す。ディスカバリと JWKS は誰にでも読ませる。**リダイレクト URI を登録していない
+オリジンの SPA は、トークンを取れない**（ブラウザが応答を読ませない）。クライアントを登録・変更した直後は、
+最長 30 秒（知らないオリジンなら数秒）で反映される。
+
 ## 5. ログアウト
 
 - RP から `{Issuer}/oidc/logout?id_token_hint=…&post_logout_redirect_uri=…&state=…` を開く。

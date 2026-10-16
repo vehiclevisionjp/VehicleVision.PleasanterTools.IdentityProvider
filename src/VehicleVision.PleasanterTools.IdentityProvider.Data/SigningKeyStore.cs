@@ -25,8 +25,6 @@ public interface ISigningKeyStore
     /// <returns>retired を消せたら <c>Deleted</c>。active は <c>StillActive</c>。</returns>
     Task<SigningKeyDeleteResult> DeleteRetiredAsync(string keyId, CancellationToken cancellationToken = default);
 
-    /// <summary>退役から日数が経った鍵を消す。</summary>
-    Task<int> DeleteRetiredOlderThanAsync(DateTime threshold, CancellationToken cancellationToken = default);
 }
 
 public enum SigningKeyDeleteResult
@@ -128,17 +126,6 @@ public sealed class SigningKeyStore(IDbConnectionFactory connectionFactory)
             new { KeyId = keyId },
             cancellationToken: cancellationToken)).ConfigureAwait(false);
         return exists > 0 ? SigningKeyDeleteResult.StillActive : SigningKeyDeleteResult.NotFound;
-    }
-
-    public async Task<int> DeleteRetiredOlderThanAsync(
-        DateTime threshold,
-        CancellationToken cancellationToken = default)
-    {
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
-        return await connection.ExecuteAsync(Sql(
-            "DELETE FROM [SigningKeys] WHERE [Status] = @Retired AND [NotAfter] < @Threshold",
-            new { Retired = SigningKey.Retired, Threshold = Db(threshold) },
-            cancellationToken: cancellationToken)).ConfigureAwait(false);
     }
 
     private static SigningKey ToMeta(MetaRow row) => new(

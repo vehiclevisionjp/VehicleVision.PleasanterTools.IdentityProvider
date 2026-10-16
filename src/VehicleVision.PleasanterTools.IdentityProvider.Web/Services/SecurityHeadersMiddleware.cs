@@ -1,5 +1,3 @@
-using VehicleVision.PleasanterTools.IdentityProvider.Web.Pages;
-
 namespace VehicleVision.PleasanterTools.IdentityProvider.Web.Services;
 
 /// <summary>セキュリティヘッダと、キャッシュの禁止を付ける。</summary>
@@ -48,9 +46,4 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
 
         await next(context);
     }
-
-    /// <summary>ログイン画面の CSS / JS は、内容が変わらないので短く持たせる。</summary>
-    public static bool IsLoginAsset(PathString path) =>
-        path.Equals(HtmlPages.CssPath, StringComparison.Ordinal)
-        || path.Equals(HtmlPages.PostScriptPath, StringComparison.Ordinal);
 }

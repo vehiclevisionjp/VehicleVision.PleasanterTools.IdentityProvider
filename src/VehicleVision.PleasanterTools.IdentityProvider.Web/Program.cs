@@ -200,6 +200,9 @@ if (!app.Environment.IsDevelopment() && !transportSecurity.AllowInsecure)
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// ブラウザ上の RP（SPA）が、トークン・UserInfo・ディスカバリ・JWKS を呼べるようにする（CORS）
+app.UseMiddleware<OidcCorsMiddleware>();
 app.UseRateLimiter();
 
 // 管理画面（TypeScript + Vite + Svelte のビルド成果物）。入口の HTML は配置先の経路を埋めてから返す。

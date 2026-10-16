@@ -101,8 +101,6 @@ internal sealed class FakeSigningKeyStore : ISigningKeyStore
     public Task<SigningKeyDeleteResult> DeleteRetiredAsync(string keyId, CancellationToken cancellationToken = default) =>
         Task.FromResult(SigningKeyDeleteResult.NotFound);
 
-    public Task<int> DeleteRetiredOlderThanAsync(DateTime threshold, CancellationToken cancellationToken = default) =>
-        Task.FromResult(0);
 }
 
 internal static class TestUsers
