@@ -61,7 +61,11 @@ internal static class TestDatabases
     /// IdP 自身の表を空から作り直す。
     /// **実機の DB は、前の実行の表が残っているので、全部落としてから当てる。**
     /// </summary>
-    public static async Task<DbConnectionFactory> FreshIdpDatabaseAsync(DatabaseProvider provider)
+    public static async Task<DbConnectionFactory> FreshIdpDatabaseAsync(DatabaseProvider provider) =>
+        (await FreshAsync(provider)).Factory;
+
+    /// <summary>空から作り直した DB と、その接続文字列。</summary>
+    public static async Task<(DbConnectionFactory Factory, string ConnectionString)> FreshAsync(DatabaseProvider provider)
     {
         var connectionString = ConnectionString(provider);
         var factory = new DbConnectionFactory(provider, connectionString);
@@ -73,7 +77,7 @@ internal static class TestDatabases
 
         await DatabaseMigrator.MigrateUpWithLockAsync(
             provider, connectionString, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
-        return factory;
+        return (factory, connectionString);
     }
 
     private static readonly string[] IdpTables =

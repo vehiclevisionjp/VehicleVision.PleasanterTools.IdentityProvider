@@ -97,9 +97,9 @@ internal sealed class SamlSp : IDisposable
         return JsonNode.Parse(text)!;
     }
 
-    public static async Task<IdpMetadata> ReadMetadataAsync(Browser browser)
+    public static async Task<IdpMetadata> ReadMetadataAsync(Browser browser, string pathBase = "")
     {
-        using var response = await browser.GetAsync("/saml/metadata");
+        using var response = await browser.GetAsync(pathBase + "/saml/metadata");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var xml = await response.Content.ReadAsStringAsync();
         var descriptor = new EntityDescriptor().ReadIdPSsoDescriptor(xml);
@@ -250,14 +250,15 @@ internal sealed class SamlSp : IDisposable
 
     private static async Task<HttpResponseMessage> ContinueAsync(Browser browser, HttpResponseMessage first, string? loginId, string password)
     {
-        if (first.StatusCode == HttpStatusCode.Redirect && first.Headers.Location!.OriginalString.StartsWith("/login", StringComparison.Ordinal))
+        if (first.StatusCode == HttpStatusCode.Redirect && first.Headers.Location!.OriginalString.Split('?')[0].EndsWith("/login", StringComparison.Ordinal))
         {
             Assert.NotNull(loginId);
             var returnUrl = QueryHelpers.ParseQuery(first.Headers.Location.OriginalString.Split('?', 2)[1])["returnUrl"].ToString();
+            var pathBase = first.Headers.Location.OriginalString.Split("/login", 2)[0];
             first.Dispose();
 
-            var login = await browser.SubmitPasswordAsync(loginId!, password, returnUrl);
-            if (login.StatusCode == HttpStatusCode.Redirect && login.Headers.Location!.OriginalString.StartsWith("/login/totp", StringComparison.Ordinal))
+            var login = await browser.SubmitPasswordAsync(loginId!, password, returnUrl, pathBase);
+            if (login.StatusCode == HttpStatusCode.Redirect && login.Headers.Location!.OriginalString.Contains("/login/totp", StringComparison.Ordinal))
             {
                 return login;
             }

@@ -28,9 +28,16 @@ public class IdpProcess : IAsyncLifetime
     /// <summary>この起動だけに足す環境変数（<see cref="InitializeAsync"/> の前に設定する）。</summary>
     public Dictionary<string, string> ExtraEnvironment { get; } = new(StringComparer.Ordinal);
 
+    /// <summary>IdP 自身の DB と、Pleasanter 相当の DB の RDBMS（既定は SQLite）。</summary>
+    public DatabaseProvider Provider { get; init; } = DatabaseProvider.Sqlite;
+
+    /// <summary>サブパス（例 <c>/idp</c>）へ置く構成。空なら根。</summary>
+    public string PathBase { get; init; } = string.Empty;
+
     public Uri BaseAddress { get; private set; } = null!;
 
-    public string Issuer => BaseAddress.ToString().TrimEnd('/');
+    /// <summary><c>iss</c> と SAML の EntityID の元。サブパス込み。</summary>
+    public string Issuer => BaseAddress.ToString().TrimEnd('/') + PathBase;
 
     internal PleasanterSeeder Pleasanter { get; private set; } = null!;
 
@@ -52,11 +59,22 @@ public class IdpProcess : IAsyncLifetime
         var port = FreePort();
         BaseAddress = new Uri($"http://127.0.0.1:{port}");
 
-        var idpConnectionString = TestDatabases.ConnectionString(DatabaseProvider.Sqlite);
-        var pleasanterConnectionString = TestDatabases.ConnectionString(DatabaseProvider.Sqlite);
-        IdpDatabase = new DbConnectionFactory(DatabaseProvider.Sqlite, idpConnectionString);
+        string idpConnectionString;
+        if (Provider is DatabaseProvider.Sqlite)
+        {
+            idpConnectionString = TestDatabases.ConnectionString(DatabaseProvider.Sqlite);
+            IdpDatabase = new DbConnectionFactory(Provider, idpConnectionString);
+        }
+        else
+        {
+            // 実機の DB は、前の実行の表を落として空から始める（Pleasanter 相当の表も同じサーバへ作る）
+            (IdpDatabase, idpConnectionString) = await TestDatabases.FreshAsync(Provider);
+        }
 
-        var pleasanterFactory = new DbConnectionFactory(DatabaseProvider.Sqlite, pleasanterConnectionString);
+        var pleasanterConnectionString = Provider is DatabaseProvider.Sqlite
+            ? TestDatabases.ConnectionString(DatabaseProvider.Sqlite)
+            : idpConnectionString;
+        var pleasanterFactory = new DbConnectionFactory(Provider, pleasanterConnectionString);
         await PleasanterSchema.CreateAsync(pleasanterFactory);
         Pleasanter = new PleasanterSeeder(pleasanterFactory);
 
@@ -77,9 +95,11 @@ public class IdpProcess : IAsyncLifetime
             ["IDP_ALLOW_INSECURE"] = "true",
             ["IDP_ISSUER"] = Issuer,
             ["IDP_SECRET_KEY"] = SecretKey,
-            ["IDP_DB_PROVIDER"] = "Sqlite",
+            ["IDP_DB_PROVIDER"] = Provider.ToString(),
             ["IDP_DB_CONNECTIONSTRING"] = idpConnectionString,
-            ["IDP_PLEASANTER_DB_PROVIDER"] = "Sqlite",
+            ["IDP_DB_ALLOW_INSECURE"] = "true",
+            ["IDP_PLEASANTER_DB_ALLOW_INSECURE"] = "true",
+            ["IDP_PLEASANTER_DB_PROVIDER"] = Provider.ToString(),
             ["IDP_PLEASANTER_DB_CONNECTIONSTRING"] = pleasanterConnectionString,
             ["IDP_LOGIN_MAX_FAILURES"] = "5",
 
@@ -87,6 +107,11 @@ public class IdpProcess : IAsyncLifetime
             ["IDP_RATE_LIMIT_LOGIN_PER_MINUTE"] = "100000",
             ["IDP_RATE_LIMIT_TOKEN_PER_MINUTE"] = "100000",
         };
+        if (PathBase.Length > 0)
+        {
+            environment["IDP_PATH_BASE"] = PathBase;
+        }
+
         foreach (var (key, value) in ExtraEnvironment)
         {
             environment[key] = value;
@@ -138,7 +163,7 @@ public class IdpProcess : IAsyncLifetime
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     // 署名鍵の生成は /ready のあと。JWKS が出るまで待つ
-                    using var jwks = await client.GetAsync("/oidc/jwks");
+                    using var jwks = await client.GetAsync(PathBase + "/oidc/jwks");
                     if (jwks.StatusCode == HttpStatusCode.OK && (await jwks.Content.ReadAsStringAsync()).Contains("\"kid\"", StringComparison.Ordinal))
                     {
                         return;
@@ -207,19 +232,19 @@ public sealed partial class Browser : IDisposable
         client.PostAsync(url, new FormUrlEncodedContent(form));
 
     /// <summary>ログイン画面を開いて、フォームの hidden（csrf と returnUrl）を取る。</summary>
-    public async Task<(string Csrf, string ReturnUrl)> OpenLoginAsync(string returnUrl)
+    public async Task<(string Csrf, string ReturnUrl)> OpenLoginAsync(string returnUrl, string pathBase = "")
     {
-        using var response = await client.GetAsync("/login?returnUrl=" + Uri.EscapeDataString(returnUrl));
+        using var response = await client.GetAsync(pathBase + "/login?returnUrl=" + Uri.EscapeDataString(returnUrl));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync();
         return (Hidden(html, "csrf"), Hidden(html, "returnUrl"));
     }
 
     /// <summary>パスワードを送る。最初の応答（リダイレクトも追わない）を返す。</summary>
-    public async Task<HttpResponseMessage> SubmitPasswordAsync(string loginId, string password, string returnUrl = "/admin")
+    public async Task<HttpResponseMessage> SubmitPasswordAsync(string loginId, string password, string returnUrl = "/admin", string pathBase = "")
     {
-        var (csrf, hiddenReturn) = await OpenLoginAsync(returnUrl);
-        return await client.PostAsync("/login", new FormUrlEncodedContent(
+        var (csrf, hiddenReturn) = await OpenLoginAsync(returnUrl, pathBase);
+        return await client.PostAsync(pathBase + "/login", new FormUrlEncodedContent(
         [
             new("loginId", loginId),
             new("password", password),
@@ -294,5 +319,15 @@ public sealed class LowRateLimitProcess : IdpProcess
     public LowRateLimitProcess()
     {
         ExtraEnvironment["IDP_RATE_LIMIT_LOGIN_PER_MINUTE"] = "3";
+    }
+}
+
+
+/// <summary>サブパス（<c>/idp</c>）へ置いた構成。</summary>
+public sealed class SubPathProcess : IdpProcess
+{
+    public SubPathProcess()
+    {
+        PathBase = "/idp";
     }
 }

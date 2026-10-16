@@ -246,12 +246,62 @@ public class LoginEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
         Assert.Contains("frame-ancestors 'none'", string.Join(';', response.Headers.GetValues("Content-Security-Policy")), StringComparison.Ordinal);
         Assert.Equal("nosniff", string.Join(',', response.Headers.GetValues("X-Content-Type-Options")));
 
+        // `no-referrer` だと、ブラウザは同じオリジンへのフォーム送信にも `Origin: null` を送り、CSRF の検査で全て断られる
+        Assert.Equal("same-origin", string.Join(',', response.Headers.GetValues("Referrer-Policy")));
+
         // CSS / JS は別ファイルで配る（インラインのスタイルとスクリプトを使わない）
         var html = await response.Content.ReadAsStringAsync();
         Assert.DoesNotContain("<style", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<script", html, StringComparison.Ordinal);
         using var css = await browser.GetAsync("/idp-assets/login.css");
         Assert.Equal(HttpStatusCode.OK, css.StatusCode);
+    }
+
+    [Fact]
+    public async Task ログインのたびに新しいセッションIDを発行する()
+    {
+        var loginId = E2E.Unique("fixation");
+        await idp.Pleasanter.AddUserAsync(loginId, E2E.Password, serviceManager: true);
+        using var browser = idp.NewBrowser();
+
+        await browser.LoginAsync(loginId, E2E.Password);
+        var first = browser.Cookies.GetCookies(idp.BaseAddress)[SsoSessionCookie]!.Value;
+
+        using (var logout = await E2E.AdminPostAsync(browser, "/api/admin/logout")) { }
+        await browser.LoginAsync(loginId, E2E.Password);
+        var second = browser.Cookies.GetCookies(idp.BaseAddress)[SsoSessionCookie]!.Value;
+
+        Assert.NotEqual(first, second);
+
+        // 古い cookie では入れない（ログアウトで失効している）
+        var stale = idp.NewBrowser();
+        stale.Cookies.Add(idp.BaseAddress, new Cookie(SsoSessionCookie, first));
+        using var response = await stale.GetAsync("/api/admin/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private const string SsoSessionCookie = "idp_session";
+
+    [Fact]
+    public async Task 署名の合わないセッションcookieでは入れない()
+    {
+        using var browser = idp.NewBrowser();
+        browser.Cookies.Add(idp.BaseAddress, new Cookie(SsoSessionCookie, Guid.NewGuid() + "." + "AAAA"));
+
+        using var response = await browser.GetAsync("/api/admin/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task 巨大な要求本文は受け付けない()
+    {
+        using var browser = idp.NewBrowser();
+        using var content = new StringContent(new string('a', 300 * 1024), System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
+
+        using var response = await browser.Http.PostAsync("/login", content);
+
+        Assert.True(response.StatusCode is HttpStatusCode.RequestEntityTooLarge or HttpStatusCode.BadRequest, response.StatusCode.ToString());
     }
 
     // ---- TOTP ------------------------------------------------------------

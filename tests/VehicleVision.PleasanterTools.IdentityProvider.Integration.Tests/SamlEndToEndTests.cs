@@ -375,6 +375,41 @@ public class SamlEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
     }
 
     [Fact]
+    public async Task 属性を1つも対応づけていないSPにはNameIDだけのアサーションを返す()
+    {
+        using var admin = await E2E.AdminAsync(idp);
+        using var sp = SamlSp.Create();
+        using (var created = await E2E.AdminPostAsync(admin, "/api/admin/saml-providers", new
+        {
+            entityId = sp.EntityId,
+            displayName = "属性なし",
+            acsUrl = sp.AcsUrl,
+            nameIdFormat = "emailAddress",
+            nameIdSource = "email",
+            attributeMappings = Array.Empty<object>(),
+        }))
+        {
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        }
+
+        var loginId = E2E.Unique("noattr");
+        await idp.Pleasanter.AddUserAsync(loginId, E2E.Password, mail: loginId + "@example.com");
+        using var browser = idp.NewBrowser();
+        var metadata = await SamlSp.ReadMetadataAsync(browser);
+
+        using var page = await SamlSp.SsoAsync(browser, sp.RedirectAuthnRequest(metadata).PathAndQuery, loginId);
+
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        var (_, samlResponse, _) = SamlSp.ParseAutoPost(await page.Content.ReadAsStringAsync());
+        var response = sp.ValidateResponse(metadata, samlResponse);
+        Assert.Equal(Saml2StatusCodes.Success, response.Status);
+        Assert.Equal(loginId + "@example.com", response.ClaimsIdentity.FindFirst(Saml2ClaimTypes.NameId)!.Value);
+
+        // ライブラリが属性の無いアサーションを書けないので、ログイン ID を 1 つだけ載せる
+        Assert.Equal(loginId, response.ClaimsIdentity.FindFirst("loginId")!.Value);
+    }
+
+    [Fact]
     public async Task アサーションだけ署名する設定でも検証できる()
     {
         using var admin = await E2E.AdminAsync(idp);
