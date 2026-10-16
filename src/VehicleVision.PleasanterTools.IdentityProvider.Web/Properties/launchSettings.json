@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "//": [
+    "デバッグ起動（F5）に要る最小限の設定を入れてある（Issue #407）。",
+    "何も設定せずに起動すると IDP_SECRET_KEY が無くて落ちるため。",
+    "⚠️ このファイルは Development 専用で、本番の構成では読まれない。",
+    "IDP_SECRET_KEY は開発用の固定値であって本番の資格情報ではない。",
+    "compose.yaml の DEV_SECRET_KEY と同じ値にしてあるので、",
+    "検証環境で作ったデータ（2 要素・送信待ちのメール）を手元の実行でも読める。",
+    "Pleasanter の接続は入れない。未設定でも起動でき、管理画面から設定できる（#388）。"
+  ],
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5067",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "IDP_DB_PROVIDER": "Sqlite",
+        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7232;http://localhost:5067",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "IDP_DB_PROVIDER": "Sqlite",
+        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
+      }
+    }
+  }
+}
