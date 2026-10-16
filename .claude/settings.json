@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(copilot *)",
+      "Bash(copilot:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet workload list)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh label list:*)",
+      "Bash(git worktree list)",
+      "Bash(npx markdownlint-cli2:*)"
+    ]
+  }
+}

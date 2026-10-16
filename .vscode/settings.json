@@ -1,0 +1,76 @@
+{
+  // ---- 検索とファイル一覧 ----------------------------------------------------
+  // **`_reference` は Pleasanter 本体（AGPL v3）。** 事実確認のための参照専用で、
+  // コードの取り込みは禁止（LICENSING.md）。**検索に出さないことで、
+  // うっかり写すことを防ぐ。** 読みたいときは明示的に開くこと
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/_reference": true,
+    "**/wwwroot/assets": true,
+    "temp": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/node_modules/**": true,
+    "**/_reference/**": true
+  },
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+
+  // ---- 書式 ------------------------------------------------------------------
+  // .editorconfig を正とする
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.tabSize": 4
+  },
+  "[svelte]": {
+    "editor.defaultFormatter": "svelte.svelte-vscode",
+    "editor.tabSize": 2
+  },
+  "[typescript]": { "editor.tabSize": 2 },
+  "[json]": { "editor.tabSize": 2 },
+  "[jsonc]": { "editor.tabSize": 2 },
+  "[yaml]": { "editor.tabSize": 2 },
+  "[markdown]": {
+    "editor.tabSize": 2,
+    // **文章を勝手に折り返さない。** 差分が読めなくなる
+    "editor.wordWrap": "on",
+    "files.trimTrailingWhitespace": false
+  },
+  "[shellscript]": { "files.eol": "\n" },
+
+  // ---- .NET ------------------------------------------------------------------
+  "dotnet.defaultSolution": "VehicleVision.PleasanterTools.IdentityProvider.slnx",
+  // **テストは明示したときだけ走らせる。** 結合テストは DB を共有していて、
+  // 勝手に走ると他の作業の行を消す
+  "dotnet.testWindow.disableAutoDiscovery": false,
+  "dotnet.server.useOmnisharp": false,
+
+  // ---- TypeScript ------------------------------------------------------------
+  // **リポジトリの版を使う。** VS Code 同梱の版だと結果が食い違う
+  "typescript.tsdk": "src/VehicleVision.PleasanterTools.IdentityProvider.Frontend/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // ---- ターミナル ------------------------------------------------------------
+  // **スクリプトは bash 前提**（scripts/*.sh）
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+
+  // ---- そのほか --------------------------------------------------------------
+  // 日本語の文章に混ざる全角空白などを見えるようにする
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "editor.rulers": [100],
+  "git.branchProtection": ["develop", "master"],
+  "git.branchProtectionPrompt": "alwaysPrompt"
+}

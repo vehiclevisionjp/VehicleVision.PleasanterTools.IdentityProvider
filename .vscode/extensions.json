@@ -1,0 +1,27 @@
+{
+  // **入れておくと作業が回るもの。** 押し付けではないので、合わなければ外してよい。
+  "recommendations": [
+    // .NET（ビルド・デバッグ・テスト）
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+
+    // フロントエンド
+    "svelte.svelte-vscode",
+
+    // 検証環境
+    "ms-azuretools.vscode-docker",
+
+    // 書式をリポジトリの決まりに揃える
+    "editorconfig.editorconfig",
+
+    // ドキュメントは日本語で書く。表の体裁が崩れやすいので見張る
+    "davidanson.vscode-markdownlint",
+
+    // GitHub Actions のワークフローを書くとき
+    "github.vscode-github-actions"
+  ],
+  "unwantedRecommendations": [
+    // **OmniSharp は使わない。** C# Dev Kit と競合する
+    "ms-dotnettools.vscode-dotnet-runtime"
+  ]
+}

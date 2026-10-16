@@ -1,0 +1,120 @@
+{
+  // デバッグの設定。
+  //
+  // **資格情報の実値をここへ書かないこと。** 入っているのは検証環境用の固定値だけで、
+  // 本番の値は環境変数か Key Vault から与える（App_Data/Parameters/README.md）。
+  //
+  // **IdP は 2 つの DB を使う。**
+  //   - IDP_PLEASANTER_DB_*  … Pleasanter の DB（読み取り専用で参照する）。検証環境では常に SQL Server
+  //   - IDP_DB_*             … IdP 自身の DB。下の構成ごとに SQL Server / PostgreSQL / MySQL を選ぶ
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // **先に「検証環境を起動（SQL Server）」を実行しておくこと。**
+      // DB と Pleasanter は Docker 側のものへ繋ぐ
+      "name": "アプリ（SQL Server の検証環境へ繋ぐ）",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "ビルド（アプリと画面）",
+      "program": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web/bin/Debug/net10.0/VehicleVision.PleasanterTools.IdentityProvider.Web.dll",
+      "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5067",
+        // **実行環境の時間帯を明示する。** Azure は既定 UTC で、
+        // 明示しないと日時が 9 時間ずれる
+        "TZ": "Asia/Tokyo",
+        "IDP_ISSUER": "http://localhost:5067",
+        "IDP_PLEASANTER_DB_PROVIDER": "SqlServer",
+        "IDP_PLEASANTER_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
+        "IDP_DB_PROVIDER": "SqlServer",
+        "IDP_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=IdentityProvider;UID=sa;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
+        // 検証環境用の固定値。**本番では必ず作り直すこと**
+        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
+      }
+    },
+    {
+      // **先に「検証環境を起動（PostgreSQL）」を実行しておくこと。**
+      "name": "アプリ（PostgreSQL の検証環境へ繋ぐ）",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "ビルド（アプリと画面）",
+      "program": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web/bin/Debug/net10.0/VehicleVision.PleasanterTools.IdentityProvider.Web.dll",
+      "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5067",
+        "TZ": "Asia/Tokyo",
+        "IDP_ISSUER": "http://localhost:5067",
+        "IDP_PLEASANTER_DB_PROVIDER": "SqlServer",
+        "IDP_PLEASANTER_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
+        "IDP_DB_PROVIDER": "PostgreSql",
+        "IDP_DB_CONNECTIONSTRING": "Host=localhost;Port=15432;Database=idp;Username=postgres;Password=IdentityProvider#Test1",
+        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
+      }
+    },
+    {
+      // **先に「検証環境を起動（MySQL）」を実行しておくこと。**
+      "name": "アプリ（MySQL の検証環境へ繋ぐ）",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "ビルド（アプリと画面）",
+      "program": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web/bin/Debug/net10.0/VehicleVision.PleasanterTools.IdentityProvider.Web.dll",
+      "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Web",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5067",
+        "TZ": "Asia/Tokyo",
+        "IDP_ISSUER": "http://localhost:5067",
+        "IDP_PLEASANTER_DB_PROVIDER": "SqlServer",
+        "IDP_PLEASANTER_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
+        "IDP_DB_PROVIDER": "MySql",
+        "IDP_DB_CONNECTIONSTRING": "Server=localhost;Port=13306;Database=idp;Uid=root;Pwd=IdentityProvider#Test1",
+        "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
+      }
+    },
+    {
+      // **結合テストは既定で走らない。** ここから起こすときだけ環境変数を渡す
+      "name": "結合テストをデバッグ",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "ビルド",
+      // **PATH の dotnet を使う。** 場所を決め打ちすると、既定の場所へ入れた環境で動かない
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "IDP_INTEGRATION": "1",
+        "VSTEST_HOST_DEBUG": "1"
+      }
+    },
+    {
+      // **テストの中で止めたいとき。** VSTEST_HOST_DEBUG=1 で待つプロセスへ繋ぐ
+      "name": "実行中のプロセスへ接続",
+      "type": "coreclr",
+      "request": "attach"
+    },
+    {
+      "name": "画面（ブラウザ）",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5067",
+      "webRoot": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Frontend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "アプリ ＋ 画面",
+      "configurations": ["アプリ（SQL Server の検証環境へ繋ぐ）", "画面（ブラウザ）"],
+      "stopAll": true
+    }
+  ]
+}
