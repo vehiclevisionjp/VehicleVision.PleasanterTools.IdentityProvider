@@ -222,6 +222,13 @@ services:
       IDP_SECRET_KEY: ${DEV_SECRET_KEY:-4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs=}
       # この IdP の外から見える URL（SAML の EntityID・OIDC の iss になる）
       IDP_ISSUER: ${DEV_ISSUER:-http://localhost:8081}
+      # **検証環境だけ。** 検証用の DB は自己署名の証明書（TrustServerCertificate=True）や平文の接続を使うので、
+      # 起動時の暗号化の検査（ConnectionSecurity）を緩める。本番では設定しないこと
+      IDP_DB_ALLOW_INSECURE: "true"
+      IDP_PLEASANTER_DB_ALLOW_INSECURE: "true"
+      # Pleasanter の既定の管理者 Administrator は TenantManager だけを持つ（ServiceManager ではない）。
+      # 検証環境では、その人が管理画面へ入れるようにする。本番は既定の ServiceManager のまま使うのがよい
+      IDP_ADMIN_ROLE: TenantManager
     ports:
       - "${DEV_APP_PORT:-8081}:8080"
 
