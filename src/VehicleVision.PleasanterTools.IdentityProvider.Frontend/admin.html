@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- **検索エンジンに載せない。** 管理画面の入口を晒さない -->
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- **配置先のサブパスと管理画面の入口。** サーバが配信時に差し替える（HtmlShell.cs） -->
+    <meta name="idp-base-path" content="__IDP_BASE_PATH__" />
+    <meta name="idp-admin-path" content="__IDP_ADMIN_PATH__" />
+    <title>IdP 管理</title>
+  </head>
+  <body>
+    <div id="admin"></div>
+    <script type="module" src="/src/admin/main.ts"></script>
+  </body>
+</html>

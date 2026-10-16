@@ -1,0 +1,423 @@
+// 管理画面の共通スタイル。配色は CSS 変数で持ち、`<html data-theme="dark">` で差し替える。
+
+:root {
+  color-scheme: light;
+  --border: #d0d5dd;
+  --muted: #667085;
+  --error: #b42318;
+  --accent: #175cd3;
+  --bg: #f9fafb;
+  --text: #101828;
+  --surface: #fff;
+  --accent-text: #fff;
+  --success: #067647;
+  --success-surface: #ecfdf3;
+  --warning-text: #7a4b00;
+  --warning-surface: #fff4e5;
+  --warning-border: #f79009;
+  --error-surface: #fef3f2;
+  --disabled-surface: #f2f4f7;
+  --info-surface: #eef4ff;
+  --info-text: #1f2a44;
+  --focus: #175cd3;
+  --font-mono: 'M PLUS 1 Code Variable', ui-monospace, Consolas, monospace;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --border: #4a4f57;
+  --muted: #b0b6c0;
+  --error: #ffb4ab;
+  --accent: #8ab4f8;
+  --bg: #121212;
+  --text: #f1f1f1;
+  --surface: #1e1e1e;
+  --accent-text: #101010;
+  --success: #75d69c;
+  --success-surface: #173528;
+  --warning-text: #ffca80;
+  --warning-surface: #3a2a14;
+  --warning-border: #d59b4a;
+  --error-surface: #3b2020;
+  --disabled-surface: #2c2c2c;
+  --info-surface: #1e2b43;
+  --info-text: #d8e6ff;
+  --focus: #8ab4f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP Variable', system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+}
+
+h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+// **フォーカスは必ず見えるようにする。** キーボードだけで操作できること
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &.secondary {
+    background: var(--surface);
+    color: var(--accent);
+  }
+
+  &.danger {
+    border-color: var(--error);
+    background: var(--error);
+    color: var(--surface);
+  }
+
+  &.secondary.danger {
+    background: var(--surface);
+    color: var(--error);
+  }
+
+  &.small {
+    padding: 0.15rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  &.link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.25em;
+  line-height: 1;
+  letter-spacing: normal;
+  white-space: nowrap;
+  vertical-align: -0.2em;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+// **読み上げには残す。** 目で見れば分かるが、耳では分からない
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+// ---- フォーム ----
+
+label.field,
+.field {
+  display: block;
+  margin-bottom: 1rem;
+
+  > .label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+
+  .hint {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+}
+
+input[type='text'],
+input[type='search'],
+input[type='url'],
+input[type='number'],
+input[type='datetime-local'],
+select,
+textarea {
+  width: 100%;
+  max-width: 40rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+
+  &[aria-invalid='true'] {
+    border-color: var(--error);
+  }
+}
+
+textarea {
+  min-height: 6rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.error-text {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+fieldset {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  legend {
+    padding: 0 0.4rem;
+    font-weight: 600;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+
+  input {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+// ---- 表・カード・帯 ----
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--disabled-surface);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+}
+
+.card {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+
+  h2 {
+    margin-top: 0;
+  }
+}
+
+dl.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+
+  dt {
+    color: var(--muted);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+  }
+}
+
+// 色だけに頼らず、必ず文字（と印）を添える
+.badge {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--disabled-surface);
+  font-size: 0.8rem;
+  white-space: nowrap;
+
+  &.ok {
+    border-color: var(--success);
+    background: var(--success-surface);
+    color: var(--success);
+  }
+
+  &.warn {
+    border-color: var(--warning-border);
+    background: var(--warning-surface);
+    color: var(--warning-text);
+  }
+
+  &.error {
+    border-color: var(--error);
+    background: var(--error-surface);
+    color: var(--error);
+  }
+
+  &.info {
+    border-color: var(--accent);
+    background: var(--info-surface);
+    color: var(--info-text);
+  }
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  &.error {
+    border-color: var(--error);
+    background: var(--error-surface);
+    color: var(--error);
+  }
+
+  &.warn {
+    border-color: var(--warning-border);
+    background: var(--warning-surface);
+    color: var(--warning-text);
+  }
+
+  &.ok {
+    border-color: var(--success);
+    background: var(--success-surface);
+    color: var(--success);
+  }
+
+  &.info {
+    border-color: var(--accent);
+    background: var(--info-surface);
+    color: var(--info-text);
+  }
+}
+
+pre.code {
+  margin: 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--disabled-surface);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// ボタンの見た目のリンク（画面遷移は `<a href="#/...">`）
+a.button-link {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  text-decoration: none;
+
+  &.secondary {
+    background: var(--surface);
+    color: var(--accent);
+  }
+
+  &.small {
+    padding: 0.15rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}
