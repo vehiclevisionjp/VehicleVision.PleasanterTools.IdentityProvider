@@ -40,7 +40,7 @@
 
 <form class="toolbar" onsubmit={lookup} role="search">
   <label for="lookup-login">{t('lookup.loginId')}</label>
-  <input id="lookup-login" type="search" bind:value={loginId} autocomplete="off" style="max-width: 18rem" required />
+  <input id="lookup-login" type="search" bind:value={loginId} autocomplete="off" class="narrow" required />
   <button type="submit" disabled={loading}>{loading ? t('common.loading') : t('lookup.run')}</button>
 </form>
 
@@ -94,3 +94,10 @@
     </section>
   {/if}
 {/if}
+
+<style lang="scss">
+  // **style 属性を使わない。** CSP（style-src 'self'）がインラインのスタイルを拒むため
+  .narrow {
+    max-width: 18rem;
+  }
+</style>

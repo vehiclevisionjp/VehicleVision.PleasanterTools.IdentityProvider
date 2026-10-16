@@ -60,7 +60,7 @@
 
 <form class="toolbar" onsubmit={search} role="search">
   <label for="session-login">{t('sessions.loginId')}</label>
-  <input id="session-login" type="search" bind:value={loginIdInput} autocomplete="off" style="max-width: 16rem" />
+  <input id="session-login" type="search" bind:value={loginIdInput} autocomplete="off" class="narrow" />
   <button type="submit">{t('common.search')}</button>
 </form>
 
@@ -134,6 +134,11 @@
 {/if}
 
 <style lang="scss">
+  // **style 属性を使わない。** CSP（style-src 'self'）がインラインのスタイルを拒むため
+  .narrow {
+    max-width: 16rem;
+  }
+
   .small-text {
     font-size: 0.8rem;
   }

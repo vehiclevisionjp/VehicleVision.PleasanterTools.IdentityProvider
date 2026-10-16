@@ -69,6 +69,10 @@ describe('validateRedirectUri', () => {
     expect(validateRedirectUri('/callback')?.key).toBe('validation.redirectUri.invalid');
     expect(validateRedirectUri('javascript:alert(1)')?.key).toBe('validation.redirectUri.scheme');
     expect(validateRedirectUri('ftp://a.example.com/')?.key).toBe('validation.redirectUri.scheme');
+    // カスタムスキームは公開クライアントだけ（逆ドメイン形式のみ）
+    expect(validateRedirectUri('com.example.app:/cb')?.key).toBe('validation.redirectUri.scheme');
+    expect(validateRedirectUri('com.example.app:/cb', true)).toBeNull();
+    expect(validateRedirectUri('myapp:/cb', true)?.key).toBe('validation.redirectUri.scheme');
   });
 });
 

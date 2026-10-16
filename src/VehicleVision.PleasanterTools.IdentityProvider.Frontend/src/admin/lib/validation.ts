@@ -76,10 +76,11 @@ function isLoopbackHost(hostname: string): boolean {
  * リダイレクト URI（ログイン後・ログアウト後の戻り先）を調べる。
  *
  * - 絶対 URI で、`https`。**`http` はループバック（localhost など）だけ**
+ * - 公開クライアントだけ、逆ドメイン形式のカスタムスキーム（`com.example.app:/cb`）も可（ネイティブアプリ）
  * - **ワイルドカードは認めない**（サーバは完全一致で照合する）
  * - フラグメント（`#`）は持てない（RFC 6749 3.1.2）
  */
-export function validateRedirectUri(uri: string): FieldError | null {
+export function validateRedirectUri(uri: string, isPublicClient = false): FieldError | null {
   if (uri.includes('*')) return { key: 'validation.redirectUri.wildcard', params: { value: uri } };
 
   let url: URL;
@@ -89,7 +90,9 @@ export function validateRedirectUri(uri: string): FieldError | null {
     return { key: 'validation.redirectUri.invalid', params: { value: uri } };
   }
 
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+  const isHttp = url.protocol === 'https:' || url.protocol === 'http:';
+  const isNativeScheme = isPublicClient && url.protocol.slice(0, -1).includes('.');
+  if (!isHttp && !isNativeScheme) {
     return { key: 'validation.redirectUri.scheme', params: { value: uri } };
   }
   if (url.protocol === 'http:' && !isLoopbackHost(url.hostname)) {
@@ -100,9 +103,9 @@ export function validateRedirectUri(uri: string): FieldError | null {
 }
 
 /** 行ごとに検証し、最初の失敗を返す。 */
-export function validateRedirectUris(uris: readonly string[]): FieldError | null {
+export function validateRedirectUris(uris: readonly string[], isPublicClient = false): FieldError | null {
   for (const uri of uris) {
-    const error = validateRedirectUri(uri);
+    const error = validateRedirectUri(uri, isPublicClient);
     if (error) return error;
   }
   return null;
@@ -230,12 +233,12 @@ export function validateOidcForm(
   if (redirectUris.length === 0) {
     errors.redirectUris = { key: 'validation.redirectUri.required' };
   } else {
-    const error = validateRedirectUris(redirectUris);
+    const error = validateRedirectUris(redirectUris, form.clientType === 'public');
     if (error) errors.redirectUris = error;
   }
 
   const postLogoutRedirectUris = parseLines(form.postLogoutRedirectUris);
-  const postLogoutError = validateRedirectUris(postLogoutRedirectUris);
+  const postLogoutError = validateRedirectUris(postLogoutRedirectUris, form.clientType === 'public');
   if (postLogoutError) errors.postLogoutRedirectUris = postLogoutError;
 
   const scopes = validateScopes(form.scopes);
@@ -301,7 +304,7 @@ export function emptySamlForm(): SamlFormState {
     nameIdSource: 'email',
     attributeMappings: [],
     signAssertion: true,
-    signResponse: false,
+    signResponse: true,
     tenantIds: '',
     enabled: true,
   };
