@@ -26,6 +26,9 @@ public sealed record OidcClient
     /// <summary>空なら全テナント。</summary>
     public IReadOnlyList<int> AllowedTenantIds { get; init; } = [];
 
+    /// <summary>ユーザー・組織・グループでの Include / Exclude（<see cref="AccessRules"/>）。空なら絞らない。</summary>
+    public IReadOnlyList<AccessRule> AccessRules { get; init; } = [];
+
     public int? AccessTokenLifetimeSeconds { get; init; }
 
     public int? RefreshTokenLifetimeSeconds { get; init; }
@@ -70,6 +73,9 @@ public sealed record SamlProvider
     public bool SignResponse { get; init; } = true;
 
     public IReadOnlyList<int> AllowedTenantIds { get; init; } = [];
+
+    /// <summary>ユーザー・組織・グループでの Include / Exclude（<see cref="AccessRules"/>）。空なら絞らない。</summary>
+    public IReadOnlyList<AccessRule> AccessRules { get; init; } = [];
 
     public bool Enabled { get; init; } = true;
 

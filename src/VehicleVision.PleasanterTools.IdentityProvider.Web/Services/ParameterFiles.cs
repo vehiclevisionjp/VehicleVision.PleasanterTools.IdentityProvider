@@ -32,7 +32,15 @@ public static class ParameterFiles
 
     /// <summary>読む対象。**この順に積む**（後のものが勝つわけではない。別名の写しで揃える）。</summary>
     private static readonly ImmutableArray<string> Names =
-        ["Service", "Security"];
+        ["Service", "Session", "Oidc", "Saml", "RateLimit", "Admin", "Security"];
+
+    /// <summary>
+    /// キーの先頭へ、ファイル名を付けずに読むファイル。
+    /// <c>Security.json</c> は Pleasanter 本体と同じ形（<c>SecondaryAuthentication:Mode</c>）のまま読む。
+    /// それ以外は <c>{ファイル名}:{キー}</c>（例 <c>Admin:Include:Users:0</c>）として読む
+    /// （ファイルごとに名前の空間が分かれ、別のファイルのキーとぶつからない）。
+    /// </summary>
+    private const string UnprefixedName = "Security";
 
     /// <summary>ファイルのキー → 正式な設定名（環境変数と同じ名前）。</summary>
     /// <remarks>
@@ -44,16 +52,27 @@ public static class ParameterFiles
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             // Service.json
-            ["Issuer"] = "IDP_ISSUER",
-            ["SessionLifetimeMinutes"] = "IDP_SESSION_LIFETIME_MINUTES",
-            ["SessionIdleMinutes"] = "IDP_SESSION_IDLE_MINUTES",
-            ["AuthorizationCodeLifetimeSeconds"] = "IDP_AUTHORIZATION_CODE_LIFETIME_SECONDS",
-            ["AccessTokenLifetimeSeconds"] = "IDP_ACCESS_TOKEN_LIFETIME_SECONDS",
-            ["IdTokenLifetimeSeconds"] = "IDP_ID_TOKEN_LIFETIME_SECONDS",
-            ["RefreshTokenLifetimeSeconds"] = "IDP_REFRESH_TOKEN_LIFETIME_SECONDS",
-            ["SamlAssertionLifetimeSeconds"] = "IDP_SAML_ASSERTION_LIFETIME_SECONDS",
-            ["AdminRole"] = "IDP_ADMIN_ROLE",
-            ["AdminLoginIds"] = "IDP_ADMIN_LOGIN_IDS",
+            ["Service:Issuer"] = "IDP_ISSUER",
+
+            // Session.json
+            ["Session:LifetimeMinutes"] = "IDP_SESSION_LIFETIME_MINUTES",
+            ["Session:IdleMinutes"] = "IDP_SESSION_IDLE_MINUTES",
+
+            // Oidc.json
+            ["Oidc:AuthorizationCodeLifetimeSeconds"] = "IDP_AUTHORIZATION_CODE_LIFETIME_SECONDS",
+            ["Oidc:AccessTokenLifetimeSeconds"] = "IDP_ACCESS_TOKEN_LIFETIME_SECONDS",
+            ["Oidc:IdTokenLifetimeSeconds"] = "IDP_ID_TOKEN_LIFETIME_SECONDS",
+            ["Oidc:RefreshTokenLifetimeSeconds"] = "IDP_REFRESH_TOKEN_LIFETIME_SECONDS",
+
+            // Saml.json
+            ["Saml:AssertionLifetimeSeconds"] = "IDP_SAML_ASSERTION_LIFETIME_SECONDS",
+
+            // RateLimit.json（階層は : でたどる。ファイル名が先頭に付く）
+            ["RateLimit:Login:PerMinute"] = "IDP_RATE_LIMIT_LOGIN_PER_MINUTE",
+            ["RateLimit:Token:PerMinute"] = "IDP_RATE_LIMIT_TOKEN_PER_MINUTE",
+
+            // Admin.json（配列の Include / Exclude / LoginIds は IdpOptions が階層のまま読む）
+            ["Admin:Role"] = "IDP_ADMIN_ROLE",
 
             // Security.json
             ["LoginMaxFailures"] = "IDP_LOGIN_MAX_FAILURES",
@@ -90,24 +109,14 @@ public static class ParameterFiles
         var resolved = ResolveDirectory(BasePathOf(builder), directory);
 
         // ---- 1. {名前}.json（一番弱い）
-        foreach (var name in Names)
-        {
-            builder.AddJsonFile(Path.Combine(resolved, $"{name}.json"),
-                optional: true, reloadOnChange: false);
-        }
-
+        builder.AddInMemoryCollection(ValuesOf(resolved, local: false));
         builder.AddInMemoryCollection(AliasesOf(resolved, local: false));
 
         // ---- 2. 環境変数
         builder.AddEnvironmentVariables();
 
         // ---- 3. {名前}.local.json（一番強い。git 管理外）
-        foreach (var name in Names)
-        {
-            builder.AddJsonFile(Path.Combine(resolved, $"{name}.local.json"),
-                optional: true, reloadOnChange: false);
-        }
-
+        builder.AddInMemoryCollection(ValuesOf(resolved, local: true));
         builder.AddInMemoryCollection(AliasesOf(resolved, local: true));
 
         // ---- 4. 何を読んだかを残す（起動時の記録に出す）
@@ -166,6 +175,53 @@ public static class ParameterFiles
             ? physical.Root
             : Directory.GetCurrentDirectory();
 
+    /// <summary>ファイルの値を、キーの形（階層は <c>:</c>）へ展開して返す。空のファイルや無いファイルは何も返さない。</summary>
+    [SuppressMessage(
+        "Reliability", "CA2000:Dispose objects before losing scope",
+        Justification = "IConfigurationRoot は読み終えた時点で用済み")]
+    private static IEnumerable<KeyValuePair<string, string?>> ValuesOf(string directory, bool local)
+    {
+        var suffix = local ? ".local.json" : ".json";
+        foreach (var name in Names)
+        {
+            var path = Path.Combine(directory, name + suffix);
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            var file = new ConfigurationBuilder().AddJsonFile(path, optional: true, reloadOnChange: false).Build();
+            foreach (var (key, value) in Flatten(file))
+            {
+                // **説明の項目（"//…"）は設定ではない**
+                if (key.Split(':').Any(part => part.StartsWith("//", StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
+                yield return new KeyValuePair<string, string?>(
+                    name == UnprefixedName ? key : $"{name}:{key}",
+                    value);
+            }
+        }
+    }
+
+    private static IEnumerable<KeyValuePair<string, string?>> Flatten(IConfiguration configuration)
+    {
+        foreach (var child in configuration.GetChildren())
+        {
+            if (child.Value is not null)
+            {
+                yield return new KeyValuePair<string, string?>(child.Path, child.Value);
+            }
+
+            foreach (var nested in Flatten(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
     /// <summary>ファイルのキーを正式な名前へ写したものを作る。</summary>
     /// <remarks>
     /// **写す前に一度だけ読む。** 積んだ後の設定から読むと、
@@ -177,16 +233,9 @@ public static class ParameterFiles
             + "ここで破棄すると後続の読み取りが失敗する形にはなっていない")]
     private static IEnumerable<KeyValuePair<string, string?>> AliasesOf(string directory, bool local)
     {
-        var suffix = local ? ".local.json" : ".json";
-        var files = new ConfigurationBuilder();
-
-        foreach (var name in Names)
-        {
-            files.AddJsonFile(Path.Combine(directory, $"{name}{suffix}"),
-                optional: true, reloadOnChange: false);
-        }
-
-        var configuration = files.Build();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(ValuesOf(directory, local))
+            .Build();
 
         foreach (var (key, setting) in Aliases)
         {

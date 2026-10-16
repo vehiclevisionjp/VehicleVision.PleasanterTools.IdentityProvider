@@ -68,7 +68,8 @@ internal sealed class SamlSp : IDisposable
         int[]? tenants = null,
         bool enabled = true,
         bool signAssertion = true,
-        bool signResponse = true)
+        bool signResponse = true,
+        object[]? accessRules = null)
     {
         using var response = await E2E.AdminPostAsync(admin, "/api/admin/saml-providers", new
         {
@@ -90,6 +91,7 @@ internal sealed class SamlSp : IDisposable
             signAssertion,
             signResponse,
             allowedTenantIds = tenants ?? [],
+            accessRules = accessRules ?? [],
             enabled,
         });
         var text = await response.Content.ReadAsStringAsync();

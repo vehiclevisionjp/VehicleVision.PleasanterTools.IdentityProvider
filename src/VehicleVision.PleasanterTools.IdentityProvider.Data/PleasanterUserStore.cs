@@ -1,5 +1,6 @@
 using System.Data.Common;
 using Dapper;
+using VehicleVision.PleasanterTools.IdentityProvider.Core.Admin;
 using VehicleVision.PleasanterTools.IdentityProvider.Core.Pleasanter;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Data;
@@ -37,7 +38,20 @@ public interface IPleasanterUserStore
 
     /// <summary>接続の確認を兼ねたユーザ数。</summary>
     Task<long> CountUsersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>アクセスのルールの対象を探す（管理画面の選択用）。無効なものは出さない。</summary>
+    /// <param name="kind"><c>user</c> / <c>dept</c> / <c>group</c>。</param>
+    /// <param name="query">名前（ユーザーはログイン ID も）の部分一致。大文字小文字は区別しない。</param>
+    Task<IReadOnlyList<DirectoryEntry>> SearchDirectoryAsync(
+        string kind,
+        int tenantId,
+        string query,
+        int limit,
+        CancellationToken cancellationToken = default);
 }
+
+/// <summary>ユーザー・組織・グループの 1 件（選択用）。<paramref name="Detail"/> はユーザーのログイン ID。</summary>
+public sealed record DirectoryEntry(int Id, string Name, string? Detail);
 
 /// <summary>Pleasanter の DB を<b>読み取り専用</b>で使う実装。</summary>
 /// <remarks>
@@ -144,17 +158,46 @@ public sealed class PleasanterUserStore(IPleasanterConnectionFactory connectionF
             ? "(m.[UserId] = @UserId OR m.[DeptId] = @DeptId)"
             : "m.[UserId] = @UserId";
 
-        var groups = (await connection.QueryAsync<string>(Sql(
-            "SELECT DISTINCT g.[GroupName] FROM [Groups] g "
+        var groupRows = (await connection.QueryAsync<(int GroupId, string GroupName)>(Sql(
+            "SELECT DISTINCT g.[GroupId], g.[GroupName] FROM [Groups] g "
             + "INNER JOIN [GroupMembers] m ON m.[GroupId] = g.[GroupId] "
             + "WHERE g.[TenantId] = @TenantId AND g.[Disabled] = @Disabled AND " + membership + " "
             + "ORDER BY g.[GroupName]",
             new { user.TenantId, user.UserId, user.DeptId, Disabled = false },
             cancellationToken: cancellationToken)).ConfigureAwait(false))
-            .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToList();
+        var groups = groupRows.Select(row => row.GroupName).Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
 
-        return new PleasanterUserProfile(user, mails, groups, deptName);
+        return new PleasanterUserProfile(user, mails, groups, deptName) { GroupIds = [.. groupRows.Select(row => row.GroupId)] };
+    }
+
+    public async Task<IReadOnlyList<DirectoryEntry>> SearchDirectoryAsync(
+        string kind,
+        int tenantId,
+        string query,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var (table, id, name, detail) = kind switch
+        {
+            AccessRules.User => ("Users", "UserId", "Name", "LoginId"),
+            AccessRules.Dept => ("Depts", "DeptId", "DeptName", null),
+            AccessRules.Group => ("Groups", "GroupId", "GroupName", null),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+
+        var like = $"%{SqlDialect.EscapeLike(query.Trim().ToLowerInvariant())}%";
+        var match = $"LOWER([{name}]) LIKE @Like ESCAPE '{SqlDialect.LikeEscape}'"
+            + (detail is null ? string.Empty : $" OR LOWER([{detail}]) LIKE @Like ESCAPE '{SqlDialect.LikeEscape}'");
+
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        var rows = await connection.QueryAsync<(int Id, string Name, string? Detail)>(Sql(
+            $"SELECT [{id}], [{name}], {(detail is null ? "NULL" : $"[{detail}]")} FROM [{table}] "
+            + $"WHERE [TenantId] = @TenantId AND [Disabled] = @Disabled AND ({match}) "
+            + $"ORDER BY [{name}], [{id}] " + SqlDialect.Page(Provider),
+            new { TenantId = tenantId, Disabled = false, Like = like, Limit = Math.Clamp(limit, 1, 100), Offset = 0 },
+            cancellationToken: cancellationToken)).ConfigureAwait(false);
+        return [.. rows.Select(row => new DirectoryEntry(row.Id, row.Name, row.Detail))];
     }
 
     public async Task<long> CountUsersAsync(CancellationToken cancellationToken = default)

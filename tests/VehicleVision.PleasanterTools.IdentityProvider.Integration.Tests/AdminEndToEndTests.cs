@@ -36,7 +36,7 @@ public class AdminEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
     }
 
     [Fact]
-    public async Task 既定ではテナント管理者だけでは入れずシステム管理者が必要()
+    public async Task 既定ではテナント管理者が入れ権限の無い人は入れない()
     {
         var loginId = E2E.Unique("tenantmgr");
         await idp.Pleasanter.AddUserAsync(loginId, E2E.Password, tenantManager: true);
@@ -45,7 +45,7 @@ public class AdminEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
 
         using var response = await browser.GetAsync("/api/admin/me");
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

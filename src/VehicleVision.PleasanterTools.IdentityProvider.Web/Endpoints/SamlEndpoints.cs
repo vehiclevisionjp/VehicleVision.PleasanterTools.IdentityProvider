@@ -211,6 +211,13 @@ public static class SamlEndpoints
             return ErrorPage(language, basePath, UiText.TenantNotAllowed, StatusCodes.Status403Forbidden);
         }
 
+        if (!await AccessCheck.AllowsAsync(users, user, provider.AccessRules, http.RequestAborted).ConfigureAwait(false))
+        {
+            await audit.WriteAsync(http, "saml.response.denied", StatusCodes.Status403Forbidden,
+                user.UserKey, user.LoginId, "SamlProvider", provider.EntityId, new { reason = "access-rule" }).ConfigureAwait(false);
+            return ErrorPage(language, basePath, UiText.TenantNotAllowed, StatusCodes.Status403Forbidden);
+        }
+
         var profile = await users.LoadProfileAsync(user, http.RequestAborted).ConfigureAwait(false);
         var nameId = provider.NameIdFormat == "transient"
             ? Guid.NewGuid().ToString("N")

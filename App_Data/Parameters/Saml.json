@@ -1,0 +1,6 @@
+{
+    "//": "SAML 2.0 の設定。値を変えるときは Saml.local.json（git 管理外）か環境変数で上書きする",
+
+    "//AssertionLifetimeSeconds": "アサーションの有効時間（秒）。SP がこの間に受け取れなければ無効。30〜3600",
+    "AssertionLifetimeSeconds": 300
+}
