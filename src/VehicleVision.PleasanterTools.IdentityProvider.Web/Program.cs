@@ -219,6 +219,9 @@ IResult AdminPage(HttpContext context, HtmlShell shell)
 }
 
 app.MapGet(adminPath.Path, AdminPage);
+
+// ブラウザで IdP の URL を開いた人を、管理画面へ案内する（ログインしていなければ、そこからサインイン画面へ）
+app.MapGet("/", (HttpContext context) => Results.Redirect(context.Request.PathBase.Add(adminPath.Path).Value!));
 app.MapFallback($"{adminPath.Path}/{{**path}}", AdminPage);
 
 // **管理画面の素の HTML は配らない。** 入口は設定した管理画面パスだけ

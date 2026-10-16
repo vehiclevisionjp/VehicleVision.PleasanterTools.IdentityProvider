@@ -17,11 +17,15 @@ public class SubPathEndToEndTests(SubPathProcess idp) : IClassFixture<SubPathPro
     {
         using var browser = idp.NewBrowser();
 
-        foreach (var path in new[] { "/login", "/.well-known/openid-configuration", "/oidc/jwks", "/saml/metadata", "/api/admin/me", "/admin" })
+        foreach (var path in new[] { "/", "/login", "/.well-known/openid-configuration", "/oidc/jwks", "/saml/metadata", "/api/admin/me", "/admin" })
         {
             using var response = await browser.GetAsync(path);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
+
+        // ルートはサブパスの下の管理画面へ案内する
+        using var root = await browser.GetAsync(Prefix + "/");
+        Assert.Equal("/idp/admin", root.Headers.Location!.OriginalString);
 
         // 生存確認だけはサブパスの外でも応答する（コンテナの probe がプロキシを通らずに直接当たるため）
         using var health = await browser.GetAsync("/healthz");

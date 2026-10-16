@@ -27,7 +27,11 @@ check_status() {
 
 check_header() {
     local path="$1" header="$2" label="$3"
-    if curl -s -D - -o /dev/null "${BASE}${path}" | grep -qi "^${header}:"; then
+    # **ヘッダを先に変数へ取る。** `curl | grep -q` だと、grep が先に終わって curl が SIGPIPE で落ち、
+    # `pipefail` で「ヘッダが無い」と誤判定することがある（応答が小さいリダイレクトで実際に起きた）
+    local headers
+    headers=$(curl -s -D - -o /dev/null "${BASE}${path}")
+    if printf '%s' "$headers" | grep -qi "^${header}:"; then
         printf 'OK   %-46s\n' "$label"
     else
         printf 'NG   %-46s missing header: %s\n' "$label" "$header" >&2
@@ -38,11 +42,20 @@ check_header() {
 echo "== Serving =="
 check_status "/healthz" 200 "liveness"
 check_status "/ready" 200 "readiness (includes DB)"
-check_status "/" 200 "front page"
+check_status "/" 302 "front page (redirects to the admin console)"
+check_status "/admin" 200 "admin console (SPA entry)"
+check_status "/login" 200 "sign-in page"
+check_status "/idp-assets/login.css" 200 "sign-in page stylesheet"
+check_status "/api/admin/me" 401 "admin API requires sign-in"
 
 echo
 echo "== OIDC discovery =="
 check_status "/.well-known/openid-configuration" 200 "OpenID Provider configuration"
+check_status "/oidc/jwks" 200 "JWKS"
+
+echo
+echo "== SAML =="
+check_status "/saml/metadata" 200 "IdP metadata"
 
 echo
 echo "== Security headers =="

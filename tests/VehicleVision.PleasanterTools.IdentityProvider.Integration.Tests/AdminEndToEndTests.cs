@@ -452,6 +452,17 @@ public class AdminEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
     }
 
     [Fact]
+    public async Task ルートを開くと管理画面へ案内する()
+    {
+        using var browser = idp.NewBrowser();
+
+        using var response = await browser.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/admin", response.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
     public async Task 生存確認と受付可否が応答する()
     {
         using var browser = idp.NewBrowser();
