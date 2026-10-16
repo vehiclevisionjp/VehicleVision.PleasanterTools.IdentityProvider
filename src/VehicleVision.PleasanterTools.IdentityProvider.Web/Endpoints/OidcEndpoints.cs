@@ -284,16 +284,20 @@ public static class OidcEndpoints
         AuditWriter audit,
         TimeProvider timeProvider)
     {
-        if (!http.Request.HasFormContentType)
-        {
-            return TokenError("invalid_request", "The request must be application/x-www-form-urlencoded.");
-        }
-
-        var form = await http.Request.ReadFormAsync(http.RequestAborted).ConfigureAwait(false);
+        // クライアント認証は本文の形に関わらず必ず通す（形が違うときは、認証のあとで断る）
+        var isForm = http.Request.HasFormContentType;
+        var form = isForm
+            ? await http.Request.ReadFormAsync(http.RequestAborted).ConfigureAwait(false)
+            : new FormCollection([]);
         var authentication = await AuthenticateClientAsync(http, form, clients).ConfigureAwait(false);
         if (authentication.Client is not { } client)
         {
             return authentication.Failure!;
+        }
+
+        if (!isForm)
+        {
+            return TokenError("invalid_request", "The request must be application/x-www-form-urlencoded.");
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -573,16 +577,20 @@ public static class OidcEndpoints
         IRefreshTokenStore refreshTokens,
         TimeProvider timeProvider)
     {
-        if (!http.Request.HasFormContentType)
-        {
-            return TokenError("invalid_request", "The request must be application/x-www-form-urlencoded.");
-        }
-
-        var form = await http.Request.ReadFormAsync(http.RequestAborted).ConfigureAwait(false);
+        // クライアント認証は本文の形に関わらず必ず通す（形が違うときは、認証のあとで断る）
+        var isForm = http.Request.HasFormContentType;
+        var form = isForm
+            ? await http.Request.ReadFormAsync(http.RequestAborted).ConfigureAwait(false)
+            : new FormCollection([]);
         var authentication = await AuthenticateClientAsync(http, form, clients).ConfigureAwait(false);
         if (authentication.Client is not { } client)
         {
             return authentication.Failure!;
+        }
+
+        if (!isForm)
+        {
+            return TokenError("invalid_request", "The request must be application/x-www-form-urlencoded.");
         }
 
         // **存在しない・他のクライアントのトークンでも 200。** 有効かどうかを教えない（RFC 7009 2.2）。
