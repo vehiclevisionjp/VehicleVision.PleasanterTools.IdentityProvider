@@ -193,6 +193,10 @@ jobs:
           IDP_PLEASANTER_DB_PROVIDER: PostgreSql
           IDP_PLEASANTER_DB_CONNECTIONSTRING: >-
             Host=localhost;Port=15432;Database=idp_pleasanter_dummy;Username=postgres;Password=IdentityProvider#Test1
+          # **検証用の DB は平文で繋ぐので、起動時の暗号化の検査（ConnectionSecurity）を緩める。**
+          # 本番では設定しない。緩めないと、PostgreSQL の既定（SSL Mode=Prefer）で起動が止まる
+          IDP_DB_ALLOW_INSECURE: "true"
+          IDP_PLEASANTER_DB_ALLOW_INSECURE: "true"
           IDP_ISSUER: http://127.0.0.1:5080
           ASPNETCORE_URLS: http://127.0.0.1:5080
           ASPNETCORE_ENVIRONMENT: Production
