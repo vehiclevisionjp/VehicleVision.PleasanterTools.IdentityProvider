@@ -1,0 +1,68 @@
+## build
+bin/
+obj/
+artifacts/
+*.user
+_dist/
+
+## rider / visual studio
+.vs/
+.idea/
+
+## node（フロントエンド: TypeScript + Vite + Svelte）
+node_modules/
+.vite/
+## フロントエンドのビルド成果物（Dockerfile か npm run build で作る）
+src/VehicleVision.PleasanterTools.Questionnaire.Web/wwwroot/
+
+## secrets / local config（接続文字列・APIキーはコミットしない）
+appsettings.*.local.json
+*.env
+.env.local
+
+## logs
+logs/
+*.log
+
+## test results
+TestResults/
+_testresults/
+
+## 一時成果物（調査メモ・検証スクリプト）: temp/{yyyyMMdd}_{内容}/
+temp/
+
+## Claude Code の並列 worktree（Agent isolation:"worktree"）の作業コピー
+## **`.claude/` を丸ごと無視しないこと。** settings.json はリポジトリ共有の設定で、
+## 追跡されないと各人の手元にしか存在しない（.claude/README.md）
+.claude/worktrees/
+
+## Claude Code の個人設定（settings.json のローカル上書き）
+.claude/settings.local.json
+
+## Parameters のローカル上書き（実値。コミットしない）
+App_Data/Parameters/*.local.json
+
+## 簡易セットアップ用 SQLite DB（本体・WAL・共有メモリを配布物や Git へ混ぜない）
+**/App_Data/*.db
+**/App_Data/*.db-wal
+**/App_Data/*.db-shm
+## 起動時マイグレーションの排他に使う SQLite（DatabaseMigrationLock が実行時に作る）。
+## ⚠️ 上の *.db では拾えない。実際に 1 度コミットしてしまった（#406）
+**/App_Data/*.migration-lock.sqlite
+**/App_Data/*.migration-lock.sqlite-wal
+**/App_Data/*.migration-lock.sqlite-shm
+
+## 検証環境の出力
+tools/pleasanter-testenv/results/
+
+# 写しを撮ったときの生成物。**報告書と失敗時の記録は git へ入れない**
+# （毎回変わるので、取り込むたびに衝突する）
+tools/screenshots/report/
+tools/screenshots/artifacts/
+
+# 手元の検証環境の控え（scripts/Backup-LocalDev.ps1）。**中身は検証環境の実データ**
+backups/
+
+## Python の実行時キャッシュ
+__pycache__/
+*.py[cod]
