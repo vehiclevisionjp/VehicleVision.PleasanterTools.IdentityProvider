@@ -21,6 +21,9 @@ internal static class E2E
 
     public static string Unique(string prefix) => prefix + "-" + Guid.NewGuid().ToString("N")[..10];
 
+    /// <summary>アクセスのルール 1 件（管理 API の JSON の形）。</summary>
+    public static object Rule(string effect, string kind, int id) => new { effect, kind, targetId = id };
+
     /// <summary>管理者（ServiceManager）を作り、ログイン済みのブラウザを返す。</summary>
     public static async Task<Browser> AdminAsync(IdpProcess idp)
     {
@@ -60,7 +63,8 @@ internal static class E2E
         string[]? scopes = null,
         string[]? redirectUris = null,
         int[]? tenants = null,
-        string[]? postLogoutRedirectUris = null)
+        string[]? postLogoutRedirectUris = null,
+        object[]? accessRules = null)
     {
         using var response = await AdminPostAsync(admin, "/api/admin/oidc-clients", new
         {
@@ -70,6 +74,7 @@ internal static class E2E
             postLogoutRedirectUris = postLogoutRedirectUris ?? ["https://app.example.com/signed-out"],
             allowedScopes = scopes ?? ["openid", "profile", "email", "groups", "offline_access"],
             allowedTenantIds = tenants ?? [],
+            accessRules = accessRules ?? [],
         });
         var text = await response.Content.ReadAsStringAsync();
         Assert.True(response.StatusCode == HttpStatusCode.Created, text);

@@ -57,6 +57,8 @@ public static class RegistrationValidator
             errors.Add("スコープに openid が必要");
         }
 
+        errors.AddRange(Admin.AccessRules.Validate(client.AccessRules));
+
         if (client.AllowedTenantIds.Any(id => id <= 0))
         {
             errors.Add("テナント ID は 1 以上の整数");
@@ -133,6 +135,8 @@ public static class RegistrationValidator
         {
             errors.Add("署名付き要求を必須にするには、署名用証明書の登録が要る");
         }
+
+        errors.AddRange(Admin.AccessRules.Validate(provider.AccessRules));
 
         if (provider.AllowedTenantIds.Any(id => id <= 0))
         {

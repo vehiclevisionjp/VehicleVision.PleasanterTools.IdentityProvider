@@ -1,0 +1,23 @@
+{
+    "//": "管理画面へ入れる人の設定。値を変えるときは Admin.local.json（git 管理外）か環境変数で上書きする。⚠️ **管理画面からは変えられない**（権限の奪い合いと締め出しの道になるため、ファイルか環境変数だけ）。入れるのは、Role を満たし、LoginIds（指定時）に含まれ、Include（指定時）のどれかに当たり、Exclude のどれにも当たらない人",
+
+    "//Role": "管理画面へ入れる Pleasanter 上の役割。TenantManager（テナント管理者以上。既定）か ServiceManager（システム管理者だけ）。Pleasanter の既定の管理者 Administrator は TenantManager だけを持つ。システム管理者の列は実機ではほぼ使われない",
+    "Role": "TenantManager",
+
+    "//LoginIds": "ログイン ID で絞る。空なら絞らない。**絞るだけで、Role を満たさない人を管理者にすることはできない**。環境変数 IDP_ADMIN_LOGIN_IDS（カンマ区切り）を与えると、この配列の代わりに使う",
+    "LoginIds": [],
+
+    "//Include": "許可（Pleasanter の UserId / DeptId / GroupId の配列）。どれか 1 つでも指定があれば、どれかに当たる人だけが入れる。全て空なら絞らない。環境変数 IDP_ADMIN_INCLUDE（user:12,dept:3,group:5 の形）を与えると、この項目の代わりに使う",
+    "Include": {
+        "Users": [],
+        "Depts": [],
+        "Groups": []
+    },
+
+    "//Exclude": "拒否。形は Include と同じ。**Include より強い**（Include に当たっていても、ここに当たれば入れない）。環境変数 IDP_ADMIN_EXCLUDE で与えると、この項目の代わりに使う",
+    "Exclude": {
+        "Users": [],
+        "Depts": [],
+        "Groups": []
+    }
+}

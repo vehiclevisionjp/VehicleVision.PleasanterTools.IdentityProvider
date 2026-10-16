@@ -1,3 +1,4 @@
+using VehicleVision.PleasanterTools.IdentityProvider.Core.Admin;
 using System.Net;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
@@ -181,7 +182,8 @@ public class IdpOptionsTests
         Assert.Equal(TimeSpan.FromHours(8), options.SessionLifetime);
         Assert.Equal(TotpMode.Auto, options.Totp.Mode);
         Assert.Equal(1, options.Totp.CountTolerances);
-        Assert.Equal(AdminRole.ServiceManager, options.AdminRole);
+        Assert.Equal(AdminRole.TenantManager, options.AdminRole);
+        Assert.Empty(options.AdminAccessRules);
         Assert.False(options.IsSecure);
     }
 
@@ -195,7 +197,9 @@ public class IdpOptionsTests
             ("IDP_TOTP_MODE", "pleasanter"),
             ("SecondaryAuthentication:Mode", "DefaultEnable"),
             ("SecondaryAuthentication:CountTolerances", "2"),
-            ("IDP_ADMIN_ROLE", "TenantManager"),
+            ("IDP_ADMIN_ROLE", "ServiceManager"),
+            ("IDP_ADMIN_INCLUDE", "group:5, dept:2"),
+            ("IDP_ADMIN_EXCLUDE", "user:9"),
             ("IDP_ADMIN_LOGIN_IDS", "Admin, root;ops")));
 
         Assert.Equal("https://idp.example.com/path", options.Issuer);
@@ -203,7 +207,10 @@ public class IdpOptionsTests
         Assert.Equal(TimeSpan.FromHours(1), options.SessionLifetime);
         Assert.Equal(3, options.LoginMaxFailures);
         Assert.Equal(new TotpPolicy(TotpMode.Pleasanter, PleasanterSecondaryAuthenticationMode.DefaultEnable, 2), options.Totp);
-        Assert.Equal(AdminRole.TenantManager, options.AdminRole);
+        Assert.Equal(AdminRole.ServiceManager, options.AdminRole);
+        Assert.Equal(
+            [new AccessRule("include", "group", 5), new AccessRule("include", "dept", 2), new AccessRule("exclude", "user", 9)],
+            options.AdminAccessRules);
         Assert.Equal(["admin", "root", "ops"], options.AdminLoginIds);
     }
 
@@ -215,6 +222,8 @@ public class IdpOptionsTests
     [InlineData("IDP_ACCESS_TOKEN_LIFETIME_SECONDS", "999999")]
     [InlineData("IDP_TOTP_MODE", "sometimes")]
     [InlineData("IDP_ADMIN_ROLE", "root")]
+    [InlineData("IDP_ADMIN_INCLUDE", "group")]
+    [InlineData("IDP_ADMIN_EXCLUDE", "tenant:1")]
     [InlineData("SecondaryAuthentication:Mode", "Always")]
     [InlineData("SecondaryAuthentication:CountTolerances", "9")]
     [InlineData("IDP_ISSUER", "not a url")]
