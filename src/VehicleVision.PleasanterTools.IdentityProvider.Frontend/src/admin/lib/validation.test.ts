@@ -5,6 +5,7 @@ import {
   emptyOidcForm,
   emptySamlForm,
   formatTenantIds,
+  validateAccessRules,
   looksLikeCertificate,
   oidcFormFromClient,
   parseLines,
@@ -128,6 +129,7 @@ describe('validateOidcForm', () => {
     displayName: '勤怠アプリ',
     redirectUris: 'https://app.example.com/cb\nhttps://app.example.com/cb2',
     tenantIds: '2, 1',
+    accessRules: [],
     accessTokenLifetimeSeconds: '600',
   });
 
@@ -143,6 +145,7 @@ describe('validateOidcForm', () => {
         postLogoutRedirectUris: [],
         allowedScopes: ['openid', 'profile', 'email'],
         allowedTenantIds: [1, 2],
+        accessRules: [],
         accessTokenLifetimeSeconds: 600,
         refreshTokenLifetimeSeconds: null,
         enabled: true,
@@ -166,6 +169,7 @@ describe('validateOidcForm', () => {
         postLogoutRedirectUris: 'nope',
         scopes: ['profile'],
         tenantIds: 'a',
+        accessRules: [],
         accessTokenLifetimeSeconds: '-1',
         refreshTokenLifetimeSeconds: 'x',
       },
@@ -201,6 +205,7 @@ describe('validateOidcForm', () => {
       postLogoutRedirectUris: [],
       allowedScopes: ['openid'],
       allowedTenantIds: [3],
+      accessRules: [],
       accessTokenLifetimeSeconds: null,
       refreshTokenLifetimeSeconds: 86400,
       enabled: false,
@@ -210,6 +215,7 @@ describe('validateOidcForm', () => {
     };
     expect(oidcFormFromClient(client)).toMatchObject({
       tenantIds: '3',
+      accessRules: [],
       accessTokenLifetimeSeconds: '',
       refreshTokenLifetimeSeconds: '86400',
     });
@@ -251,6 +257,7 @@ describe('SAML', () => {
       ...valid(),
       attributeMappings: [{ attributeName: ' mail ', source: 'email' }],
       tenantIds: '5',
+      accessRules: [],
     });
     expect(result).toMatchObject({
       ok: true,
@@ -259,6 +266,7 @@ describe('SAML', () => {
         signingCertificate: null,
         attributeMappings: [{ attributeName: 'mail', source: 'email' }],
         allowedTenantIds: [5],
+        accessRules: [],
       },
     });
   });
@@ -307,11 +315,41 @@ describe('SAML', () => {
       signingCertificate: null,
       attributeMappings: [{ attributeName: 'a', source: 'email' }],
       allowedTenantIds: [1],
+      accessRules: [],
       createdAt: '',
       updatedAt: '',
     } as SamlProvider;
     const form = samlFormFromProvider(provider);
     form.attributeMappings[0]!.attributeName = 'changed';
     expect(provider.attributeMappings[0]!.attributeName).toBe('a');
+  });
+});
+
+describe('validateAccessRules', () => {
+  const rule = (effect: 'include' | 'exclude', kind: 'user' | 'dept' | 'group', targetId: number) => ({
+    effect,
+    kind,
+    targetId,
+    label: null,
+  });
+
+  it('空や、重ならないルールは通る', () => {
+    expect(validateAccessRules([])).toBeNull();
+    expect(validateAccessRules([rule('include', 'group', 1), rule('exclude', 'user', 1), rule('include', 'dept', 1)])).toBeNull();
+  });
+
+  it('同じ対象を許可と拒否の両方へ入れると失敗する', () => {
+    expect(validateAccessRules([rule('include', 'group', 1), rule('exclude', 'group', 1)])).toMatchObject({
+      key: 'validation.accessRules.conflict',
+    });
+  });
+
+  it('同じ対象の同じ種別が重なるのは構わない（サーバが重複を畳む）', () => {
+    expect(validateAccessRules([rule('include', 'group', 1), rule('include', 'group', 1)])).toBeNull();
+  });
+
+  it('200 件を超えると失敗する', () => {
+    const many = Array.from({ length: 201 }, (_, i) => rule('include', 'user', i + 1));
+    expect(validateAccessRules(many)).toMatchObject({ key: 'validation.accessRules.tooMany' });
   });
 });

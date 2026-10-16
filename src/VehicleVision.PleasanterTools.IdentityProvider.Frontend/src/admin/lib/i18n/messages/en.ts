@@ -57,6 +57,25 @@ export const en: Record<keyof typeof ja, string> = {
   'common.tenantIds': 'Allowed tenant IDs',
   'common.tenantIds.hint': 'Separate with commas, spaces or new lines (e.g. 1, 2). Leave empty to allow all tenants.',
 
+  // ---- Access rules ----
+  'accessRules.title': 'Restrict by user, department or group',
+  'accessRules.hint':
+    'Once you add any Include rule, only people matching one of them can use this. People matching an Exclude rule are always denied, even if they match an Include. Leave empty to allow everyone. A group counts if the user is a direct member or their department is a member (nested groups are not followed).',
+  'accessRules.empty': 'No rules (everyone who passes the tenant condition can use this).',
+  'accessRules.effect': 'Include or exclude',
+  'accessRules.effect.include': 'Include',
+  'accessRules.effect.exclude': 'Exclude',
+  'accessRules.kind': 'Target type',
+  'accessRules.kind.user': 'User',
+  'accessRules.kind.dept': 'Department',
+  'accessRules.kind.group': 'Group',
+  'accessRules.query': 'Search by name (empty lists the first ones)',
+  'accessRules.search': 'Search',
+  'accessRules.noResults': 'Nothing found (only enabled entries in your own tenant are searched).',
+  'accessRules.add': 'Add',
+  'accessRules.remove': 'Remove',
+  'accessRules.manual': 'Add by ID directly (Pleasanter UserId / DeptId / GroupId)',
+
   // ---- Dashboard ----
   'dashboard.title': 'Dashboard',
   'dashboard.endpoints': 'Endpoints',
@@ -279,6 +298,8 @@ export const en: Record<keyof typeof ja, string> = {
   'validation.redirectUri.fragment': '"{value}" must not contain a fragment (#).',
   'validation.scope.openid': 'The openid scope is required.',
   'validation.scope.unknown': '"{value}" is not an available scope.',
+  'validation.accessRules.conflict': '"{target}" cannot be both included and excluded.',
+  'validation.accessRules.tooMany': 'At most {max} rules are allowed.',
   'validation.tenantIds': '"{value}" is not a tenant ID. Separate positive integers with commas or spaces.',
   'validation.seconds': 'Enter an integer from 1 to 31536000 (seconds), or leave empty.',
   'validation.certificate': 'This does not look like a certificate. Paste PEM or Base64.',

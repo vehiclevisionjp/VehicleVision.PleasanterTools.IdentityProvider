@@ -9,6 +9,8 @@ import type { MessageKey } from './i18n/messages';
 import {
   ATTRIBUTE_SOURCES,
   OIDC_SCOPES,
+  type AccessEffect,
+  type AccessRule,
   type AttributeMapping,
   type AttributeSource,
   type ClientType,
@@ -151,6 +153,28 @@ export function parseOptionalSeconds(text: string): Parsed<number | null> {
   return { ok: true, value: seconds };
 }
 
+/** アクセスのルールの上限（サーバと同じ）。 */
+export const MAX_ACCESS_RULES = 200;
+
+/**
+ * アクセスのルールを検証する。**同じ対象を include と exclude の両方へ入れられない**（サーバと同じ）。
+ */
+export function validateAccessRules(rules: readonly AccessRule[]): FieldError | null {
+  if (rules.length > MAX_ACCESS_RULES) {
+    return { key: 'validation.accessRules.tooMany', params: { max: MAX_ACCESS_RULES } };
+  }
+  const effects = new Map<string, AccessEffect>();
+  for (const rule of rules) {
+    const key = `${rule.kind}:${rule.targetId}`;
+    const previous = effects.get(key);
+    if (previous !== undefined && previous !== rule.effect) {
+      return { key: 'validation.accessRules.conflict', params: { target: rule.label ?? key } };
+    }
+    effects.set(key, rule.effect);
+  }
+  return null;
+}
+
 /** クライアント ID に使える文字（URL とヘッダに載せても壊れないもの）。 */
 const CLIENT_ID_PATTERN = /^[A-Za-z0-9._~-]{1,100}$/;
 
@@ -165,6 +189,7 @@ export interface OidcFormState {
   postLogoutRedirectUris: string;
   scopes: string[];
   tenantIds: string;
+  accessRules: AccessRule[];
   accessTokenLifetimeSeconds: string;
   refreshTokenLifetimeSeconds: string;
   enabled: boolean;
@@ -179,6 +204,7 @@ export function emptyOidcForm(): OidcFormState {
     postLogoutRedirectUris: '',
     scopes: ['openid', 'profile', 'email'],
     tenantIds: '',
+    accessRules: [],
     accessTokenLifetimeSeconds: '',
     refreshTokenLifetimeSeconds: '',
     enabled: true,
@@ -194,6 +220,7 @@ export function oidcFormFromClient(client: OidcClient): OidcFormState {
     postLogoutRedirectUris: client.postLogoutRedirectUris.join('\n'),
     scopes: [...client.allowedScopes],
     tenantIds: formatTenantIds(client.allowedTenantIds),
+    accessRules: client.accessRules.map((rule) => ({ ...rule })),
     accessTokenLifetimeSeconds: client.accessTokenLifetimeSeconds?.toString() ?? '',
     refreshTokenLifetimeSeconds: client.refreshTokenLifetimeSeconds?.toString() ?? '',
     enabled: client.enabled,
@@ -207,6 +234,7 @@ export type OidcFormField =
   | 'postLogoutRedirectUris'
   | 'scopes'
   | 'tenantIds'
+  | 'accessRules'
   | 'accessTokenLifetimeSeconds'
   | 'refreshTokenLifetimeSeconds';
 
@@ -247,6 +275,9 @@ export function validateOidcForm(
   const tenantIds = parseTenantIds(form.tenantIds);
   if (!tenantIds.ok) errors.tenantIds = tenantIds.error;
 
+  const rulesError = validateAccessRules(form.accessRules);
+  if (rulesError) errors.accessRules = rulesError;
+
   const access = parseOptionalSeconds(form.accessTokenLifetimeSeconds);
   if (!access.ok) errors.accessTokenLifetimeSeconds = access.error;
 
@@ -267,6 +298,7 @@ export function validateOidcForm(
       postLogoutRedirectUris,
       allowedScopes: scopes.value,
       allowedTenantIds: tenantIds.value,
+      accessRules: form.accessRules.map((rule) => ({ ...rule })),
       accessTokenLifetimeSeconds: access.value,
       refreshTokenLifetimeSeconds: refresh.value,
       enabled: form.enabled,
@@ -289,6 +321,7 @@ export interface SamlFormState {
   signAssertion: boolean;
   signResponse: boolean;
   tenantIds: string;
+  accessRules: AccessRule[];
   enabled: boolean;
 }
 
@@ -306,6 +339,7 @@ export function emptySamlForm(): SamlFormState {
     signAssertion: true,
     signResponse: true,
     tenantIds: '',
+    accessRules: [],
     enabled: true,
   };
 }
@@ -324,6 +358,7 @@ export function samlFormFromProvider(provider: SamlProvider): SamlFormState {
     signAssertion: provider.signAssertion,
     signResponse: provider.signResponse,
     tenantIds: formatTenantIds(provider.allowedTenantIds),
+    accessRules: provider.accessRules.map((rule) => ({ ...rule })),
     enabled: provider.enabled,
   };
 }
@@ -344,6 +379,7 @@ export function applyImportedMetadata(form: SamlFormState, imported: SamlProvide
 }
 
 export type SamlFormField =
+  | 'accessRules'
   | 'entityId'
   | 'displayName'
   | 'acsUrl'
@@ -414,6 +450,9 @@ export function validateSamlForm(form: SamlFormState): FormResult<SamlProviderIn
   const tenantIds = parseTenantIds(form.tenantIds);
   if (!tenantIds.ok) errors.tenantIds = tenantIds.error;
 
+  const rulesError = validateAccessRules(form.accessRules);
+  if (rulesError) errors.accessRules = rulesError;
+
   if (Object.keys(errors).length > 0 || !tenantIds.ok) {
     return { ok: false, errors };
   }
@@ -436,6 +475,7 @@ export function validateSamlForm(form: SamlFormState): FormResult<SamlProviderIn
       signAssertion: form.signAssertion,
       signResponse: form.signResponse,
       allowedTenantIds: tenantIds.value,
+      accessRules: form.accessRules.map((rule) => ({ ...rule })),
       enabled: form.enabled,
     },
   };

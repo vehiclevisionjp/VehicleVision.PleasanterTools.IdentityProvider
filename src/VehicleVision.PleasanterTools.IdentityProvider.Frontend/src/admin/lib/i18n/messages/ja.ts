@@ -55,6 +55,25 @@ export const ja = {
   'common.tenantIds': '許可するテナント ID',
   'common.tenantIds.hint': 'カンマ・空白・改行で区切る（例: 1, 2）。空なら全テナントを許可する。',
 
+  // ---- アクセスのルール ----
+  'accessRules.title': 'ユーザー・組織・グループで絞る',
+  'accessRules.hint':
+    '許可（Include）を 1 件でも入れると、どれかに当たる人だけが使える。拒否（Exclude）に当たる人は、許可に当たっていても使えない。空なら絞らない。所属するグループは、本人が直接のメンバーか、所属組織がメンバーのもの（グループの入れ子は辿らない）。',
+  'accessRules.empty': 'ルールは無い（テナントの条件を満たす全員が使える）。',
+  'accessRules.effect': '許可か拒否か',
+  'accessRules.effect.include': '許可',
+  'accessRules.effect.exclude': '拒否',
+  'accessRules.kind': '対象の種類',
+  'accessRules.kind.user': 'ユーザー',
+  'accessRules.kind.dept': '組織',
+  'accessRules.kind.group': 'グループ',
+  'accessRules.query': '名前で探す（空なら先頭から）',
+  'accessRules.search': '探す',
+  'accessRules.noResults': '見つからない（自分のテナントの、無効でないものだけを探す）。',
+  'accessRules.add': '追加',
+  'accessRules.remove': '外す',
+  'accessRules.manual': 'ID で直接入れる（Pleasanter の UserId / DeptId / GroupId）',
+
   // ---- ダッシュボード ----
   'dashboard.title': 'ダッシュボード',
   'dashboard.endpoints': 'エンドポイント',
@@ -277,6 +296,8 @@ export const ja = {
   'validation.redirectUri.fragment': '「{value}」にフラグメント（#）は付けられません。',
   'validation.scope.openid': 'スコープには openid が必要です。',
   'validation.scope.unknown': '「{value}」は使えないスコープです。',
+  'validation.accessRules.conflict': '「{target}」を許可と拒否の両方へ入れられません。',
+  'validation.accessRules.tooMany': 'ルールは {max} 件までです。',
   'validation.tenantIds': '「{value}」はテナント ID として読めません。正の整数をカンマか空白で区切ってください。',
   'validation.seconds': '1 以上 31536000 以下の整数（秒）を入力するか、空にしてください。',
   'validation.certificate': '証明書として読めません。PEM か Base64 で貼り付けてください。',
