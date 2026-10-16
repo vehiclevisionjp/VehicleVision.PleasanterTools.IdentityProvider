@@ -13,7 +13,7 @@ _dist/
 node_modules/
 .vite/
 ## フロントエンドのビルド成果物（Dockerfile か npm run build で作る）
-src/VehicleVision.PleasanterTools.Questionnaire.Web/wwwroot/
+src/VehicleVision.PleasanterTools.IdentityProvider.Web/wwwroot/
 
 ## secrets / local config（接続文字列・APIキーはコミットしない）
 appsettings.*.local.json
@@ -42,26 +42,10 @@ temp/
 ## Parameters のローカル上書き（実値。コミットしない）
 App_Data/Parameters/*.local.json
 
-## 簡易セットアップ用 SQLite DB（本体・WAL・共有メモリを配布物や Git へ混ぜない）
+## SQLite DB（簡易セットアップ・試験用。本体・WAL・共有メモリを配布物や Git へ混ぜない）
 **/App_Data/*.db
 **/App_Data/*.db-wal
 **/App_Data/*.db-shm
-## 起動時マイグレーションの排他に使う SQLite（DatabaseMigrationLock が実行時に作る）。
-## ⚠️ 上の *.db では拾えない。実際に 1 度コミットしてしまった（#406）
-**/App_Data/*.migration-lock.sqlite
-**/App_Data/*.migration-lock.sqlite-wal
-**/App_Data/*.migration-lock.sqlite-shm
-
-## 検証環境の出力
-tools/pleasanter-testenv/results/
-
-# 写しを撮ったときの生成物。**報告書と失敗時の記録は git へ入れない**
-# （毎回変わるので、取り込むたびに衝突する）
-tools/screenshots/report/
-tools/screenshots/artifacts/
-
-# 手元の検証環境の控え（scripts/Backup-LocalDev.ps1）。**中身は検証環境の実データ**
-backups/
 
 ## Python の実行時キャッシュ
 __pycache__/

@@ -1,0 +1,238 @@
+# 開発環境ひとそろい。
+#
+# **ホストに .NET SDK も node も DB クライアントも要求しない**ことが目的。
+# Pleasanter 本体と 3 種類の RDBMS、IdP アプリをまとめて起動する。
+#
+# 構成:
+#   - Pleasanter（db / codedefiner / pleasanter）… 常に起動する。ブラウザは http://localhost:8080。
+#     DB は SQL Server 2025。IdP はこの DB を **読み取り専用で** 参照する
+#   - IdP 自身の DB … profile で RDBMS を選ぶ（sqlserver / postgres / mysql）。
+#     Pleasanter の DB とは **別のデータベース**（SQL Server は同じサーバ内の別 DB でよい）
+#   - IdP アプリ（app）… http://localhost:8081
+#
+#   SQL Server で動かす:  docker compose --profile sqlserver up -d --wait
+#   PostgreSQL で動かす:  docker compose --profile postgres  up -d --wait
+#   MySQL で動かす:       docker compose --profile mysql     up -d --wait
+#   後片付け:             docker compose --profile "*" down -v
+#
+# PostgreSQL / MySQL で動かすときは IdP 自身の DB の接続先を環境変数で差し替える
+# （Pleasanter 側の DB は常に SQL Server のまま）。
+#
+#   DEV_DB_PROVIDER=PostgreSql DEV_DB_CONNECTIONSTRING='Host=db-postgres;Database=idp;Username=postgres;Password=IdentityProvider#Test1' \
+#     docker compose --profile postgres up -d --wait
+#   DEV_DB_PROVIDER=MySql DEV_DB_CONNECTIONSTRING='Server=db-mysql;Database=idp;Uid=root;Pwd=IdentityProvider#Test1' \
+#     docker compose --profile mysql up -d --wait
+#
+# **Windows の Git Bash からは MSYS_NO_PATHCONV=1 を付けること。**
+
+name: idp-dev
+
+# Pleasanter 本体の DB 設定。**Dbms は環境変数では設定できない**
+# （Implem.DefinitionAccessor/Initializer.cs は接続文字列しか環境変数で読まない）。
+# 公式イメージの Rds.json は Dbms: PostgreSQL が焼き込まれているため、
+# このファイルをマウントして SQLServer に差し替える。
+# **接続文字列は null にしておく。** 環境変数（Implem.Pleasanter_Rds_*ConnectionString）から読まれる。
+# JSON 側に値があると環境変数は無視される
+configs:
+  pleasanter-rds:
+    content: |
+      {
+        "Dbms": "SQLServer",
+        "Provider": "Local",
+        "SaConnectionString": null,
+        "OwnerConnectionString": null,
+        "UserConnectionString": null,
+        "SqlCommandTimeOut": 0,
+        "MinimumTime": 3,
+        "DeadlockRetryCount": 4,
+        "DeadlockRetryInterval": 1000,
+        "DisableIndexChangeDetection": true,
+        "SysLogsSchemaVersion": 1,
+        "MySqlConnectingHost": "%"
+      }
+
+# Pleasanter の接続文字列（codedefiner と pleasanter で同じ値を使う）
+x-pleasanter-environment: &pleasanter-environment
+  Implem.Pleasanter_Rds_Dbms: SQLServer
+  Implem.Pleasanter_Rds_SaConnectionString: "Server=db;Database=master;UID=sa;PWD=${DEV_SA_PASSWORD:-IdentityProvider#Test1};TrustServerCertificate=True"
+  Implem.Pleasanter_Rds_OwnerConnectionString: "Server=db;Database=#ServiceName#;UID=#ServiceName#_Owner;PWD=${DEV_SA_PASSWORD:-IdentityProvider#Test1};TrustServerCertificate=True"
+  Implem.Pleasanter_Rds_UserConnectionString: "Server=db;Database=#ServiceName#;UID=#ServiceName#_User;PWD=${DEV_SA_PASSWORD:-IdentityProvider#Test1};TrustServerCertificate=True"
+  TZ: Asia/Tokyo
+
+services:
+  # ---- Pleasanter 本体（常に起動する）---------------------------------------
+  db:
+    # タグはレジストリで確認して固定する
+    #   curl -s https://mcr.microsoft.com/v2/mssql/server/tags/list
+    image: mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DEV_SA_PASSWORD:-IdentityProvider#Test1}
+      MSSQL_PID: Developer
+      TZ: Asia/Tokyo
+    ports:
+      - "${DEV_DB_PORT:-11433}:1433"
+    healthcheck:
+      # 2022 以降のイメージは mssql-tools18。自己署名証明書なので -C（信頼）が要る
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" -b
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+    volumes:
+      - db-data:/var/opt/mssql
+
+  # スキーマ作成 ＋ 90 日トライアル登録（項目拡張を有効化）。完了して終了する
+  codedefiner:
+    image: implem/pleasanter:codedefiner
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *pleasanter-environment
+    configs:
+      # CodeDefiner イメージの Parameters は /app/Implem.Pleasanter/App_Data/Parameters 配下
+      - source: pleasanter-rds
+        target: /app/Implem.Pleasanter/App_Data/Parameters/Rds.json
+    # CodeDefiner のオプションは "/" 接頭辞（"-" ではない）。/y=無人実行
+    command: ["trial", "/y"]
+    restart: "no"
+
+  pleasanter:
+    # サブモジュール _reference/Implem.Pleasanter の固定位置（Pleasanter_1.5.9.0）に合わせる
+    image: implem/pleasanter:1.5.9.0
+    depends_on:
+      codedefiner:
+        condition: service_completed_successfully
+    environment: *pleasanter-environment
+    ports:
+      - "${DEV_PLEASANTER_PORT:-8080}:8080"
+    configs:
+      # 本体イメージの Parameters は /app/App_Data/Parameters 配下（CodeDefiner とは階層が異なる）
+      - source: pleasanter-rds
+        target: /app/App_Data/Parameters/Rds.json
+    healthcheck:
+      # 本体イメージ（dotnet runtime ベース）には curl / wget が無いため bash の /dev/tcp で待受を確認する
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  # ---- IdP 自身の DB（3 RDBMS。profile で選ぶ）-------------------------------
+  # SQL Server は Pleasanter 用の `db` を共用し、その中に別のデータベースを作る。
+
+  # **SQL Server だけ、IdP の DB を作る係が要る。**
+  # PostgreSQL と MySQL は公式イメージの `POSTGRES_DB` / `MYSQL_DATABASE` が
+  # 起動時に作るが、**SQL Server のイメージにはその仕掛けが無い。**
+  # 接続文字列に書いても作られないし、スキーマの適用（マイグレーション）も
+  # データベース自体は作らない。
+  #
+  # **`db` と同じくプロファイルを持たせない。** 常に走らせて構わない
+  # （空のデータベースを 1 つ作るだけ。何度実行しても同じ結果になる）。
+  # 同じイメージを使い回す。sqlcmd のためだけに別のイメージを増やさない
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Tokyo
+      MSSQL_SA_PASSWORD: ${DEV_SA_PASSWORD:-IdentityProvider#Test1}
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -eu
+        /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P "$$MSSQL_SA_PASSWORD" -C -b \
+          -Q "IF DB_ID('IdentityProvider') IS NULL CREATE DATABASE [IdentityProvider];"
+
+  db-postgres:
+    # タグはレジストリで確認して固定する
+    image: postgres:18-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_PASSWORD: ${DEV_SA_PASSWORD:-IdentityProvider#Test1}
+      POSTGRES_DB: idp
+      TZ: Asia/Tokyo
+    ports:
+      - "${DEV_POSTGRES_PORT:-15432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      # **PostgreSQL 18 以降はマウント位置が /var/lib/postgresql。**
+      # 従来の /var/lib/postgresql/data へ当てると起動時に弾かれる
+      - postgres-data:/var/lib/postgresql
+
+  db-mysql:
+    image: mysql:26
+    profiles: ["mysql"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DEV_SA_PASSWORD:-IdentityProvider#Test1}
+      MYSQL_DATABASE: idp
+      TZ: Asia/Tokyo
+    # **utf8mb4 を明示する。** 既定が 3 バイトの utf8 だと絵文字が入らない
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_as_cs
+    ports:
+      - "${DEV_MYSQL_PORT:-13306}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  # ---- IdP アプリ ------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["sqlserver", "postgres", "mysql"]
+    depends_on:
+      # SQL Server のときだけ IdP の DB を作る係を待つ。
+      # プロファイルが合わない依存は compose が黙って外す
+      db-init:
+        condition: service_completed_successfully
+      # Pleasanter の DB が出来てから起こす（読み取りの参照先）
+      pleasanter:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # **Azure の実行環境は既定 UTC。** 明示しないと日時が 9 時間ずれる
+      TZ: Asia/Tokyo
+      # **Pleasanter の DB。IdP は読み取り専用で参照する。**
+      # 資格情報はサーバ側だけで保持し、ブラウザへ渡さない。実値をここへ書かない（検証環境用の固定値のみ）
+      IDP_PLEASANTER_DB_PROVIDER: ${DEV_PLEASANTER_DB_PROVIDER:-SqlServer}
+      IDP_PLEASANTER_DB_CONNECTIONSTRING: ${DEV_PLEASANTER_DB_CONNECTIONSTRING:-Server=db;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True}
+      # **IdP 自身の DB。** プロファイルに応じて環境変数で差し替える
+      IDP_DB_PROVIDER: ${DEV_DB_PROVIDER:-SqlServer}
+      IDP_DB_CONNECTIONSTRING: ${DEV_DB_CONNECTIONSTRING:-Server=db;Database=IdentityProvider;UID=sa;PWD=IdentityProvider#Test1;TrustServerCertificate=True}
+      # **署名鍵などを守る鍵。** これを失うと保存済みの秘密が全て使えなくなる。
+      # 本番では App Service の設定か Key Vault に置き、**控えを取っておくこと**。
+      # ここにあるのは検証環境用の固定値
+      IDP_SECRET_KEY: ${DEV_SECRET_KEY:-4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs=}
+      # この IdP の外から見える URL（SAML の EntityID・OIDC の iss になる）
+      IDP_ISSUER: ${DEV_ISSUER:-http://localhost:8081}
+      # **検証環境だけ。** 検証用の DB は自己署名の証明書（TrustServerCertificate=True）や平文の接続を使うので、
+      # 起動時の暗号化の検査（ConnectionSecurity）を緩める。本番では設定しないこと
+      IDP_DB_ALLOW_INSECURE: "true"
+      IDP_PLEASANTER_DB_ALLOW_INSECURE: "true"
+      # Pleasanter の既定の管理者 Administrator は TenantManager だけを持つ（ServiceManager ではない）。
+      # 検証環境では、その人が管理画面へ入れるようにする。本番は既定の ServiceManager のまま使うのがよい
+      IDP_ADMIN_ROLE: TenantManager
+    ports:
+      - "${DEV_APP_PORT:-8081}:8080"
+
+volumes:
+  db-data:
+  postgres-data:
+  mysql-data:

@@ -1,0 +1,161 @@
+# ビルド・単体テスト・フロントエンド・ライセンス検査。
+#
+# **ここで定義したジョブ名は必須ステータスチェックへ登録する。以後変えないこと**
+# （_documents/ブランチ運用方針.md「ブランチ保護」）。名前を変えると、必須チェックが
+# 「待ち続けるが永遠に来ない」状態になり、マージできなくなる。
+#
+# 参照した一次情報（いずれも 2026-08-18 参照）
+#   - ワークフロー構文
+#     https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+#   - actions/checkout v7.0.1 / actions/setup-dotnet v6.0.0 / actions/setup-node v7.0.0
+#     （各リポジトリの最新リリースを GitHub API で確認）
+#   - setup-dotnet の global-json-file / setup-node の cache-dependency-path
+#     https://github.com/actions/setup-dotnet/blob/v6.0.0/README.md
+#     https://github.com/actions/setup-node/blob/v7.0.0/README.md
+name: CI
+
+on:
+  # **全ブランチへの push で回す。** 根幹ブランチへの PR でも回す
+  # （_documents/ブランチ運用方針.md「CI の実行条件」）。
+  # タグの push では回さない（リリースは別の手順）
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - develop
+      - master
+
+# 同じブランチの実行が重なったら、古い方は打ち切る
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# **既定を読み取りだけにする。** 書き込みが要るジョブは無い
+permissions:
+  contents: read
+
+env:
+  # ビルド時の余計な出力と、初回実行時のメッセージを抑える
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+
+jobs:
+  build-test:
+    name: ビルドと単体テスト
+    runs-on: ubuntu-latest
+    steps:
+      - name: ソースを取得する
+        uses: actions/checkout@v7
+        with:
+          # **_reference（Pleasanter 本体・AGPL v3）は取得しない。**
+          # 参照専用であり、ビルドにもテストにも要らない
+          submodules: false
+
+      - name: .NET SDK を用意する
+        uses: actions/setup-dotnet@v6
+        with:
+          # 版は global.json を単一の情報源にする（SDK 10.0.100）
+          global-json-file: global.json
+
+      - name: SQL Server の起動待ちスクリプトを検証する
+        run: python3 -m unittest discover -s scripts/tests -p 'test_wait_sqlserver.py' -v
+
+      - name: 依存を復元する
+        run: dotnet restore VehicleVision.PleasanterTools.IdentityProvider.slnx
+
+      - name: ビルドする
+        run: >-
+          dotnet build VehicleVision.PleasanterTools.IdentityProvider.slnx
+          --no-restore -c Release
+
+      - name: 単体テストを実行する
+        # **結合テスト（Integration.Tests）はここで回さない。**
+        # IDP_INTEGRATION を設定しないと何も検証せずに緑になるため、
+        # ここに混ぜると「通った」と誤読する。DB を用意した別ワークフローで回す
+        # （.github/workflows/integration.yml）
+        run: |
+          set -euo pipefail
+          for proj in tests/*/*.csproj; do
+              case "$proj" in
+                  *Integration.Tests*)
+                      echo "飛ばす（結合テストは integration.yml で回す）: $proj"
+                      continue
+                      ;;
+              esac
+              echo "== $proj"
+              dotnet test "$proj" --no-build -c Release \
+                  --logger "trx;LogFileName=$(basename "$proj" .csproj).trx" \
+                  --results-directory "$GITHUB_WORKSPACE/TestResults"
+          done
+
+      - name: テスト結果を残す
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: 単体テスト結果
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+  frontend:
+    name: フロントエンド
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/VehicleVision.PleasanterTools.IdentityProvider.Frontend
+    steps:
+      - name: ソースを取得する
+        uses: actions/checkout@v7
+        with:
+          submodules: false
+
+      - name: Node を用意する
+        uses: actions/setup-node@v7
+        with:
+          # Dockerfile の node:24-alpine に合わせる
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: >-
+            src/VehicleVision.PleasanterTools.IdentityProvider.Frontend/package-lock.json
+
+      - name: 依存を導入する
+        # **npm install ではなく npm ci。** package-lock.json のとおりに入れる
+        run: npm ci
+
+      - name: 型と Svelte を検査する
+        run: npm run check
+
+      - name: 単体テストを実行する
+        # **型検査では捕まらない規則を見る**。
+        # 画面の状態管理・入力の検証など、型検査では捕まらない規則
+        run: npm run test
+
+      - name: ビルドする
+        # 成果物は ../{Web}/wwwroot へ出る（vite.config.ts の outDir）
+        run: npx vite build
+
+  license-check:
+    name: ライセンス検査
+    runs-on: ubuntu-latest
+    steps:
+      - name: ソースを取得する
+        uses: actions/checkout@v7
+        with:
+          submodules: false
+
+      - name: Pleasanter 本体の混入を検査する
+        # **デュアルライセンス（AGPL ＋ 商用）の前提を機械で守る。**
+        # 取り込むと商用ライセンスでの提供ができなくなる（LICENSING.md）
+        run: bash ./scripts/license-check.sh
+
+      - name: VS Code のタスク定義を検査する
+        # ⚠️ **手元でしか壊れないものは CI を素通りする**（Issue #411 / #413）。
+        # タスクが壊れると F5 が通らず、開発が止まる。
+        # **2 日続けて壊し、2 回とも利用者が踏んで初めて分かった**ので機械で見る
+        run: bash ./scripts/vscode-task-check.sh
+
+      - name: AGENTS.md が参照元と同期しているか検査する
+        # **AGENTS.md は .github/copilot-instructions.md からの生成物。**
+        # 参照元だけ直して生成し忘れると、Codex CLI などへ古い規約が届く（Issue #480）
+        run: bash ./scripts/sync-agents.sh --check

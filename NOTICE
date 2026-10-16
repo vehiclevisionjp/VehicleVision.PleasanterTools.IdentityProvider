@@ -1,0 +1,79 @@
+VehicleVision.PleasanterTools.IdentityProvider
+Copyright (C) PMC Co.,Ltd.
+
+本ソフトウェアはデュアルライセンス（AGPL-3.0-or-later OR LicenseRef-PMC-Commercial）で
+提供されます。詳細は LICENSING.md を参照してください。
+
+--------------------------------------------------------------------------------
+サードパーティソフトウェア
+--------------------------------------------------------------------------------
+
+本ソフトウェアが利用する OSS は、すべて寛容ライセンス（MIT / BSD 系 / Apache-2.0）に
+限定しています（書体のみ SIL OFL 1.1 を認める。copilot-instructions.md の規約 7）。
+コピーレフト系（GPL / AGPL / SSPL 等）の依存が 1 つでも入ると、
+商用ライセンスでの提供ができなくなります。
+
+依存を追加したら、このファイルへ「名称 / バージョン / ライセンス / 入手元」を追記すること。
+
+名称 / バージョン / ライセンス / 入手元
+
+  Dapper 2.1.89 / Apache-2.0 / https://www.nuget.org/packages/Dapper
+  FluentMigrator 8.0.1 / Apache-2.0 / https://www.nuget.org/packages/FluentMigrator
+  FluentMigrator.Runner 8.0.1 / Apache-2.0
+  FluentMigrator.Runner.SqlServer 8.0.1 / Apache-2.0
+  FluentMigrator.Runner.Postgres 8.0.1 / Apache-2.0
+  FluentMigrator.Runner.MySql 8.0.1 / Apache-2.0
+  FluentMigrator.Runner.SQLite 8.0.1 / Apache-2.0 / https://www.nuget.org/packages/FluentMigrator.Runner.SQLite/8.0.1
+  Microsoft.Data.Sqlite 10.0.12 / MIT / https://www.nuget.org/packages/Microsoft.Data.Sqlite/10.0.12
+    （Apache-2.0 の SQLitePCLRaw と、パブリックドメインの SQLite を推移的に伴う）
+  Microsoft.Data.SqlClient 7.1.1 / MIT / https://www.nuget.org/packages/Microsoft.Data.SqlClient
+  Npgsql 10.0.3 / PostgreSQL License（BSD 系の寛容ライセンス） / https://www.nuget.org/packages/Npgsql
+  MySqlConnector 2.6.2 / MIT / https://www.nuget.org/packages/MySqlConnector
+  Microsoft.Extensions.DependencyInjection 10.0.12 / MIT
+  Otp.NET 1.4.1 / MIT / https://github.com/kspearrin/Otp.NET
+    （TOTP の検証。Pleasanter 本体も同じライブラリで検証している）
+  ITfoxtec.Identity.Saml2 4.21.0 / BSD-3-Clause / https://github.com/ITfoxtec/ITfoxtec.Identity.Saml2
+  ITfoxtec.Identity.Saml2.MvcCore 4.21.0 / BSD-3-Clause / https://github.com/ITfoxtec/ITfoxtec.Identity.Saml2
+    （SAML 2.0 の IdP 側。Microsoft.IdentityModel.* と Newtonsoft.Json を推移的に伴う。いずれも MIT）
+  Microsoft.IdentityModel.JsonWebTokens 8.23.0 / MIT / https://www.nuget.org/packages/Microsoft.IdentityModel.JsonWebTokens
+    （OIDC の ID トークン・アクセストークンの署名と検証）
+  System.Security.Cryptography.Pkcs 10.0.13 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Pkcs
+    （Microsoft.Data.SqlClient が推移的に伴う。脆弱性の修正版へ固定している）
+  System.Security.Cryptography.Xml 10.0.13 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Xml
+    （ITfoxtec.Identity.Saml2 が推移的に伴う。テストプロジェクトのみ脆弱性の修正版へ固定している）
+
+フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体のみ。**
+残りはビルド時だけ使う）
+
+  svelte 5.57.2 / MIT / https://www.npmjs.com/package/svelte
+  vite 8.3.4 / MIT / https://www.npmjs.com/package/vite
+  @sveltejs/vite-plugin-svelte 7.3.1 / MIT
+  svelte-check 4.7.6 / MIT
+  vitest 5.0.4 / MIT / https://www.npmjs.com/package/vitest
+  sass 1.105.1 / MIT
+  typescript 6.0.3 / Apache-2.0
+
+同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
+
+  @fontsource-variable/noto-sans-jp 5.3.1 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource-variable/noto-sans-jp
+    （Noto Sans JP Variable。unicode-range で分割された woff2）
+  @fontsource-variable/m-plus-1-code 5.3.1 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource-variable/m-plus-1-code
+    （M PLUS 1 Code Variable。日本語も等幅になる。ID・URL・鍵の表示に使う）
+  @fontsource/material-icons 5.3.0 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource/material-icons
+    （Material Icons。**上流（google/material-design-icons）は Apache-2.0** だが、
+      npm パッケージは OFL-1.1 を宣言している）
+
+ビルド時だけ使うもの（成果物へは入らない）
+
+  vite の推移的な依存に、MPL-2.0 の lightningcss（CSS の変換器）と ISC の picocolors がある。
+  **どちらも組み立ての道具で、成果物にも配布物にも含まれない。**
+
+テスト時のみ使用するもの
+
+  xunit 2.9.3 / Apache-2.0
+  xunit.runner.visualstudio 4.0.1 / Apache-2.0
+  Microsoft.NET.Test.Sdk 18.10.1 / MIT
+  coverlet.collector 10.1.0 / MIT
+  Microsoft.Extensions.TimeProvider.Testing 10.10.0 / MIT
+
+**依存を追加したら、ここへ追記してからコミットすること。**

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VehicleVision.PleasanterTools.IdentityProvider.Core/VehicleVision.PleasanterTools.IdentityProvider.Core.csproj" />
+    <Project Path="src/VehicleVision.PleasanterTools.IdentityProvider.Data/VehicleVision.PleasanterTools.IdentityProvider.Data.csproj" />
+    <Project Path="src/VehicleVision.PleasanterTools.IdentityProvider.Web/VehicleVision.PleasanterTools.IdentityProvider.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VehicleVision.PleasanterTools.IdentityProvider.Core.Tests/VehicleVision.PleasanterTools.IdentityProvider.Core.Tests.csproj" />
+    <Project Path="tests/VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests/VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests.csproj" />
+    <Project Path="tests/VehicleVision.PleasanterTools.IdentityProvider.Web.Tests/VehicleVision.PleasanterTools.IdentityProvider.Web.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <!-- SAML 2.0 の IdP（メタデータ・AuthnRequest の検証・署名付き Response）。BSD-3-Clause -->
+    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.21.0" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.21.0" />
+    <!-- OIDC の ID トークン・アクセストークン（JWT）の署名。MIT -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
+    <!-- 推移的依存（ITfoxtec.Identity.Saml2 経由）の脆弱性の修正版へ固定する -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VehicleVision.PleasanterTools.IdentityProvider.Core\VehicleVision.PleasanterTools.IdentityProvider.Core.csproj" />
+    <ProjectReference Include="..\VehicleVision.PleasanterTools.IdentityProvider.Data\VehicleVision.PleasanterTools.IdentityProvider.Data.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- 設定ファイルの既定値（App_Data/Parameters/*.json）を、ビルドと publish の出力へ写す。
+       **{名前}.local.json は写さない**（実値が入り得る。git 管理外） -->
+  <ItemGroup>
+    <Content Include="..\..\App_Data\Parameters\*.json"
+             Exclude="..\..\App_Data\Parameters\*.local.json"
+             Link="App_Data\Parameters\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="VehicleVision.PleasanterTools.IdentityProvider.Web.Tests" />
+    <InternalsVisibleTo Include="VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests" />
+  </ItemGroup>
+
+</Project>
