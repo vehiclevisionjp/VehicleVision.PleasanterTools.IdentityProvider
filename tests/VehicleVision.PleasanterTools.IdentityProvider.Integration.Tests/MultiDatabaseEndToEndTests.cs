@@ -108,4 +108,64 @@ public class MultiDatabaseEndToEndTests
             await idp.DisposeAsync();
         }
     }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public async Task アクセスのルールと対象の検索がRDBMSを問わず通る(DatabaseProvider provider)
+    {
+        var idp = new IdpProcess { Provider = provider };
+        await idp.InitializeAsync();
+        try
+        {
+            // 組織・グループ・ユーザー（日本語・絵文字を含む名前。LIKE の大文字小文字と予約語の差を当てる）
+            await idp.Pleasanter.AddDeptAsync(1, 31, "開発部 🚀");
+            await idp.Pleasanter.AddGroupAsync(1, 41, "Admins グループ");
+            await idp.Pleasanter.AddGroupAsync(1, 42, "他のグループ");
+            var member = E2E.Unique("rulemember");
+            var memberId = await idp.Pleasanter.AddUserAsync(member, E2E.Password, deptId: 31, mail: member + "@example.com");
+            await idp.Pleasanter.AddGroupMemberAsync(41, userId: memberId);
+            var outsider = E2E.Unique("ruleoutsider");
+            await idp.Pleasanter.AddUserAsync(outsider, E2E.Password, mail: outsider + "@example.com");
+            var blocked = E2E.Unique("ruleblocked");
+            var blockedId = await idp.Pleasanter.AddUserAsync(blocked, E2E.Password, deptId: 31, mail: blocked + "@example.com");
+            await idp.Pleasanter.AddGroupMemberAsync(41, userId: blockedId);
+
+            using var admin = await E2E.AdminAsync(idp);
+
+            // 対象の検索（大文字小文字を区別せず、日本語・絵文字も引ける）
+            async Task<System.Text.Json.Nodes.JsonArray> SearchAsync(string kind, string q)
+            {
+                using var response = await admin.GetAsync($"/api/admin/pleasanter/directory?kind={kind}&q={Uri.EscapeDataString(q)}");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                return System.Text.Json.Nodes.JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsArray();
+            }
+
+            Assert.Equal(41, Assert.Single(await SearchAsync("group", "ADMINS"))!["id"]!.GetValue<int>());
+            Assert.Equal(31, Assert.Single(await SearchAsync("dept", "🚀"))!["id"]!.GetValue<int>());
+            Assert.Contains(await SearchAsync("user", member.ToUpperInvariant()), user => user!["id"]!.GetValue<int>() == memberId);
+
+            // OIDC: グループの Include と、組織の Exclude（Exclude が勝つ）
+            var (clientId, _) = await E2E.CreateClientAsync(admin, accessRules:
+            [
+                E2E.Rule("include", "group", 41),
+                E2E.Rule("exclude", "user", blockedId),
+            ]);
+
+            async Task<bool> IssuesAsync(string loginId)
+            {
+                using var browser = idp.NewBrowser();
+                var redirect = await E2E.AuthorizeAsync(browser, E2E.AuthorizeUrl(clientId, E2E.NewPkce().Challenge), loginId);
+                var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(redirect.Query);
+                return !query.ContainsKey("error") && query.ContainsKey("code");
+            }
+
+            Assert.True(await IssuesAsync(member));
+            Assert.False(await IssuesAsync(outsider));
+            Assert.False(await IssuesAsync(blocked));
+        }
+        finally
+        {
+            await idp.DisposeAsync();
+        }
+    }
 }
