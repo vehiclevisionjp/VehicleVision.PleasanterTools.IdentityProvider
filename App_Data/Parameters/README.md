@@ -39,13 +39,14 @@
 | `IDP_PLEASANTER_DB_CONNECTIONSTRING` | Pleasanter の DB への接続文字列。**資格情報を含む** |
 | `IDP_DB_PROVIDER` | IdP 自身の DB の種類 |
 | `IDP_DB_CONNECTIONSTRING` | IdP 自身の DB への接続文字列。**資格情報を含む** |
-| `IDP_SECRET_KEY` | IdP が保存する秘密（署名鍵など）を守る鍵。**無ければ、起動時に作って `Service.local.json` へ保存する**（単一インスタンス向け。控えを取ること）。**失うと保存済みの秘密が全て使えなくなる。** 本番では Key Vault などへ置き、控えを取ること。`openssl rand -base64 32` で作れる |
+| `IDP_SECRET_KEY` | IdP が保存する秘密（署名鍵など）を守る鍵。**無ければ、起動時に作って `Security.local.json` へ保存する**（単一インスタンス向け。控えを取ること）。**失うと保存済みの秘密が全て使えなくなる。** 本番では Key Vault などへ置き、控えを取ること。`openssl rand -base64 32` で作れる |
 | `IDP_ISSUER` | IdP の外から見える URL。SAML の EntityID と OIDC の `iss` になる。**公開 URL と必ず一致させること**（検証環境の既定 `http://localhost:8081`） |
 
+- **Docker secrets などは、`IDP_X` のかわりに `IDP_X_FILE=パス` で与える**（ファイルの中身が値。両方与えると起動で止まる）
 - **配置先ごとの与え方（systemd・IIS・Windows・Docker・Kubernetes）は、[`_documents/導入-更新運用手順書.md`](../../_documents/導入-更新運用手順書.md) の「設定の与え方（配置先ごと）」。**
 - 上の表は **最小の起動に要るもの**。設定を増やしたときは、この表と
   [`_documents/開発環境.md`](../../_documents/開発環境.md) の環境変数の節へ追記すること
-- **ここにある環境変数は、`Rds.json`（DB）と `Service.json`（`SecretKey` など）でも指定できる**（下の「ファイル」の表）。
+- **ここにある環境変数は、`Rds.json`（DB）・`Service.json`・`Security.json`（`SecretKey` など）でも指定できる**（下の「ファイル」の表）。
   環境変数が `.json` より強く、`.local.json` が一番強い
 - **環境変数の接頭辞は `IDP_`。** 階層は `_` 区切りで、小文字・大文字は区別しない
 
@@ -65,7 +66,7 @@
 
 | ファイル | 内容 | 読まれているか |
 |---|---|---|
-| `Service.json` | `Issuer`・`SecretKey`・`AllowInsecure`・`PathBase`・`ForwardedNetworks`・`HealthNetworks` | ✅ |
+| `Service.json` | `Issuer`・`AllowInsecure`・`PathBase`・`ForwardedNetworks`・`HealthNetworks` | ✅ |
 | `Rds.json` | DB（`Pleasanter` と `Idp`。種類は `Dbms`、接続文字列、暗号化の検査、起動時のマイグレーション） | ✅ |
 | `Session.json` | SSO セッションの有効時間・無操作の許容時間 | ✅ |
 | `Oidc.json` | 認可コード・アクセストークン・ID トークン・リフレッシュトークンの有効時間 | ✅ |

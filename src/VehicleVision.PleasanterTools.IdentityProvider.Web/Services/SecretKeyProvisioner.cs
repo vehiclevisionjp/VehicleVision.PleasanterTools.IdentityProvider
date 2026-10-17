@@ -3,11 +3,11 @@ using System.Text.Json.Nodes;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Web.Services;
 
-/// <summary><c>IDP_SECRET_KEY</c>（<c>Service.json</c> の <c>SecretKey</c>）の用意。無ければ作ってローカルのファイルへ残す。</summary>
+/// <summary><c>IDP_SECRET_KEY</c>（<c>Security.json</c> の <c>SecretKey</c>）の用意。無ければ作ってローカルのファイルへ残す。</summary>
 /// <remarks>
 /// <para>
 /// **既に与えられていれば何もしない**（環境変数・Key Vault・<c>.local.json</c> が先）。
-/// 無いときだけ新しい鍵を作り、<c>Service.local.json</c>（git 管理外）の <c>SecretKey</c> へ書く。
+/// 無いときだけ新しい鍵を作り、<c>Security.local.json</c>（git 管理外。他のツールの鍵の自動生成と同じ置き場）の <c>SecretKey</c> へ書く。
 /// 次の起動からは、そのファイルを読む。
 /// </para>
 /// <para>
@@ -24,7 +24,10 @@ public static class SecretKeyProvisioner
 {
     public const string Setting = "IDP_SECRET_KEY";
 
-    public const string FileName = "Service.local.json";
+    public const string FileName = "Security.local.json";
+
+    /// <summary>自動生成の切り替え（既定 true。<c>false</c> なら、鍵が無いときは起動を止める）。</summary>
+    public const string AutoGenerateSetting = "IDP_SECRET_KEY_AUTOGENERATE";
 
     private const string JsonKey = "SecretKey";
 
@@ -39,6 +42,12 @@ public static class SecretKeyProvisioner
         {
             generatedAt = null;
             return given;
+        }
+
+        if (string.Equals(configuration[AutoGenerateSetting], "false", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"{Setting} is not set and {AutoGenerateSetting}=false. Set {Setting} (Base64 of 32 bytes; generate with --generate-secret-key).");
         }
 
         var key = SecretProtector.GenerateKey();

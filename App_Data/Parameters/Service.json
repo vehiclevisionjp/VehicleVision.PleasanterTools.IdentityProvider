@@ -4,9 +4,6 @@
     "//Issuer": "この IdP の外から見える URL（末尾の / なし）。OIDC の iss と SAML の EntityID（{Issuer}/saml/metadata）になる。**公開 URL と必ず一致させる。** サブパスへ置くときは IDP_PATH_BASE と合わせて、サブパス込みで書く。http は localhost / ループバックだけ（それ以外は IDP_ALLOW_INSECURE=true が要る）。未設定なら http://localhost:8081",
     "Issuer": null,
 
-    "//SecretKey": "署名鍵の秘密鍵を暗号化する鍵（Base64 の 32 バイト）と、cookie の署名鍵の元。**無ければ、起動時に作って Service.local.json へ保存する**（IdP の DB に署名鍵がまだ無いときだけ。複数インスタンス・使い捨てのファイルシステムでは明示的に与える）。**失うと保存済みの署名鍵が復号できなくなる。** 控えを取ること。`dotnet …Web.dll --generate-secret-key` で作れる。⚠️ **実値はここへコミットしない。** Service.local.json（git 管理外）か環境変数 IDP_SECRET_KEY（Key Vault など）で与える",
-    "SecretKey": null,
-
     "//AllowInsecure": "true で、https でない Issuer（localhost / ループバック以外）を許し、HTTPS へのリダイレクトと HSTS を切る。**検証環境だけ。** 本番では設定しない",
     "AllowInsecure": false,
 

@@ -35,7 +35,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 // **署名・暗号化に使う鍵。** 失うと、保存した署名鍵が復号できなくなる。
 // App Service の設定か Key Vault に置き、控えを取っておくこと。
-// **無いときだけ、新しく作って Service.local.json（git 管理外）へ残す**（初回起動の手間を省く。
+// **無いときだけ、新しく作って Security.local.json（git 管理外）へ残す**（IDP_SECRET_KEY_AUTOGENERATE=false で止められる）（初回起動の手間を省く。
 // 複数インスタンス・使い捨てのファイルシステムでは明示的に与えること）
 var secretKeyText = SecretKeyProvisioner.Resolve(
     builder.Configuration,

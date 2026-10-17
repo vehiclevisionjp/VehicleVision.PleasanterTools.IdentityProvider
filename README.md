@@ -61,7 +61,7 @@ Pleasanter 本体（`Pleasanter_1.5.9.0`）に揃えている。
 
 ```bash
 export IDP_ISSUER=https://idp.example.com
-export IDP_SECRET_KEY="$(dotnet VehicleVision.PleasanterTools.IdentityProvider.Web.dll --generate-secret-key)"  # 控えること。省くと起動時に作って Service.local.json へ保存する（単一インスタンス向け）
+export IDP_SECRET_KEY="$(dotnet VehicleVision.PleasanterTools.IdentityProvider.Web.dll --generate-secret-key)"  # 控えること。省くと起動時に作って Security.local.json へ保存する（単一インスタンス向け）
 export IDP_DB_PROVIDER=PostgreSql
 export IDP_DB_CONNECTIONSTRING='Host=…;Database=idp;Username=…;Password=…;SSL Mode=VerifyFull'
 export IDP_PLEASANTER_DB_PROVIDER=SqlServer
