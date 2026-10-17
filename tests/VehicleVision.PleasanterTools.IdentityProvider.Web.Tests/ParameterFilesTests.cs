@@ -99,9 +99,10 @@ public sealed class ParameterFilesTests : IDisposable
     [Fact]
     public void 環境変数と同じ設定をファイルでも指定できる()
     {
+        Write("Security.json", """{ "SecretKey": "k", "SecretKeyAutoGenerate": false }""");
         Write("Service.json", """
             {
-              "SecretKey": "k", "AllowInsecure": true, "PathBase": "/idp",
+              "AllowInsecure": true, "PathBase": "/idp",
               "ForwardedNetworks": ["10.0.0.0/8", "192.168.0.0/16"], "HealthNetworks": []
             }
             """);
@@ -118,6 +119,7 @@ public sealed class ParameterFilesTests : IDisposable
         var configuration = LoadConfiguration();
 
         Assert.Equal("k", configuration["IDP_SECRET_KEY"]);
+        Assert.Equal("False", configuration["IDP_SECRET_KEY_AUTOGENERATE"]);
         Assert.Equal("True", configuration["IDP_ALLOW_INSECURE"]);
         Assert.Equal("/idp", configuration["IDP_PATH_BASE"]);
         Assert.Equal("10.0.0.0/8,192.168.0.0/16", configuration["IDP_FORWARDED_NETWORKS"]);
@@ -183,7 +185,7 @@ public sealed class ParameterFilesTests : IDisposable
     [Fact]
     public void FILEが空欄や名前だけなら無視する()
     {
-        Assert.Empty(ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", " "), ("IDP__FILE", "x"), ("IDP_FILE", "x"))));
+        Assert.Empty(ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", ""), ("IDP__FILE", "x"), ("IDP_FILE", "x"), ("OTHER_X_FILE", "x"))));
     }
 
     [Fact]
@@ -206,5 +208,61 @@ public sealed class ParameterFilesTests : IDisposable
         Directory.CreateDirectory(directory);
         Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(
             ("IDP_SECRET_KEY_FILE", directory))));
+    }
+
+    [Theory]
+    [InlineData("v"+NL+"", "v")]
+    [InlineData("v"+CRLF, "v")]
+    [InlineData("v"+NL+NL, "v"+NL)]
+    [InlineData("a"+NL+"b"+NL, "a"+NL+"b")]
+    public void 末尾の改行は1つだけ落とす_複数行はそのまま(string content, string expected) =>
+        Assert.Equal(expected, ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", SecretFile(content))))["IDP_X"]);
+
+    private const string NL = "\n";
+    private const string CRLF = "\r\n";
+
+    [Fact]
+    public void 環境変数の名前は大文字小文字を区別しない()
+    {
+        var values = ParameterFiles.ValuesFromFiles(Env(("idp_x_file", SecretFile("v"))));
+
+        Assert.Equal("v", values["IDP_X"]);
+    }
+
+    [Fact]
+    public void 相対パスと大きすぎるファイルは止める()
+    {
+        Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", "relative/path"))));
+        var big = SecretFile(new string('a', ParameterFiles.MaximumFileSizeBytes + 1));
+        Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", big))));
+        Assert.Equal(ParameterFiles.MaximumFileSizeBytes, ParameterFiles.ValuesFromFiles(
+            Env(("IDP_X_FILE", SecretFile(new string('a', ParameterFiles.MaximumFileSizeBytes)))))["IDP_X"]!.Length);
+    }
+
+    [Fact]
+    public void 証明書のような複数行も読める()
+    {
+        var pem = "-----BEGIN CERTIFICATE-----"+NL+"AAA"+NL+"-----END CERTIFICATE-----"+NL;
+
+        Assert.Equal(pem.TrimEnd((char)10), ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", SecretFile(pem))))["IDP_X"]);
+    }
+
+    [Fact]
+    public void 実際の積み方では環境変数と同じ位置でlocal_jsonより弱い()
+    {
+        const string name = "IDP_ISSUER";
+        Write("Service.json", """{ "Issuer": "https://file.test" }""");
+        Environment.SetEnvironmentVariable(name + "_FILE", SecretFile("https://secret.test"));
+        try
+        {
+            Assert.Equal("https://secret.test", new ConfigurationBuilder().AddParameterFiles(directory).Build()[name]);
+
+            Write("Service.local.json", """{ "Issuer": "https://local.test" }""");
+            Assert.Equal("https://local.test", new ConfigurationBuilder().AddParameterFiles(directory).Build()[name]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(name + "_FILE", null);
+        }
     }
 }

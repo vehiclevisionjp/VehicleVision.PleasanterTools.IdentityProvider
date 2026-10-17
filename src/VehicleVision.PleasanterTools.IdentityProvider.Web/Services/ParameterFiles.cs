@@ -53,7 +53,6 @@ public static class ParameterFiles
         {
             // Service.json
             ["Service:Issuer"] = "IDP_ISSUER",
-            ["Service:SecretKey"] = "IDP_SECRET_KEY",
             ["Service:AllowInsecure"] = "IDP_ALLOW_INSECURE",
             ["Service:PathBase"] = "IDP_PATH_BASE",
             ["Service:ForwardedNetworks"] = "IDP_FORWARDED_NETWORKS",
@@ -99,6 +98,8 @@ public static class ParameterFiles
             ["LoginFailureWindowMinutes"] = "IDP_LOGIN_FAILURE_WINDOW_MINUTES",
             ["LoginLockoutMinutes"] = "IDP_LOGIN_LOCKOUT_MINUTES",
             ["TotpMode"] = "IDP_TOTP_MODE",
+            ["SecretKey"] = "IDP_SECRET_KEY",
+            ["SecretKeyAutoGenerate"] = "IDP_SECRET_KEY_AUTOGENERATE",
         }.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>実際に読んだ置き場。**起動時の記録に出す。**</summary>
@@ -156,9 +157,13 @@ public static class ParameterFiles
     /// <summary>環境変数の接頭辞。<c>IDP_</c> で始まるものだけを対象にする。</summary>
     private const string EnvironmentPrefix = "IDP_";
 
+    /// <summary>秘密のファイルに許す最大の大きさ（バイト）。証明書（PEM）が入る大きさ。</summary>
+    public const int MaximumFileSizeBytes = 64 * 1024;
+
     private static Dictionary<string, string?> EnvironmentSnapshot()
     {
-        var snapshot = new Dictionary<string, string?>(StringComparer.Ordinal);
+        // Windows の環境変数は大文字小文字を区別しないので、名前の比較も揃える
+        var snapshot = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             snapshot[(string)entry.Key] = entry.Value as string;
@@ -171,11 +176,17 @@ public static class ParameterFiles
     /// <c>IDP_X_FILE=/run/secrets/x</c> を、<c>IDP_X</c> = ファイルの中身へ直す（Docker secrets・Kubernetes の Secret のマウント用）。
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// **他のツール（Questionnaire・AtomFeed など）の <c>*_FILE</c> と同じ約束にしてある。**
+    /// 値は環境変数に載らない（<c>docker inspect</c> や <c>/proc/…/environ</c> に出ない）。
+    /// </para>
     /// <list type="bullet">
-    /// <item><b>末尾の改行だけ</b>を落とす（先頭・途中の空白は値の一部）。</item>
-    /// <item><b><c>IDP_X</c> と <c>IDP_X_FILE</c> の両方があれば止める。</b>どちらが効くか曖昧なため。</item>
-    /// <item><b>無い・読めない・空のファイルも止める。</b>黙って既定へ落とすと、鍵や接続先が変わったことに気付けない。</item>
-    /// <item><b>値はメッセージへ出さない。</b>パスだけ出す。</item>
+    /// <item><b>末尾の改行を 1 つだけ</b>落とす（<c>\n</c> か <c>\r\n</c>）。複数行（証明書の PEM など）はそのまま読める。</item>
+    /// <item><b>絶対パスだけ</b>を受け付け、<b>64 KB まで</b>。</item>
+    /// <item><b><c>IDP_X</c> と <c>IDP_X_FILE</c> の両方があれば止める。</b>どちらが効くか曖昧なため。値が空の <c>IDP_X</c> は無いものとして扱う。</item>
+    /// <item><b>無い・読めない・大きすぎる・空のファイルも止める。</b>黙って既定へ落とすと、鍵や接続先が変わったことに気付けない。</item>
+    /// <item><b>値はメッセージへ出さない。</b>名前とパスだけ出す。</item>
+    /// <item>環境変数の名前は<b>大文字小文字を区別しない</b>。</item>
     /// </list>
     /// </remarks>
     /// <exception cref="InvalidOperationException">上のいずれかに当たるとき。</exception>
@@ -183,13 +194,13 @@ public static class ParameterFiles
     {
         ArgumentNullException.ThrowIfNull(environment);
 
-        var values = new Dictionary<string, string?>(StringComparer.Ordinal);
+        var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         foreach (var (name, path) in environment)
         {
-            if (!name.StartsWith(EnvironmentPrefix, StringComparison.Ordinal)
-                || !name.EndsWith(FileSuffix, StringComparison.Ordinal)
+            if (!name.StartsWith(EnvironmentPrefix, StringComparison.OrdinalIgnoreCase)
+                || !name.EndsWith(FileSuffix, StringComparison.OrdinalIgnoreCase)
                 || name.Length <= EnvironmentPrefix.Length + FileSuffix.Length
-                || string.IsNullOrWhiteSpace(path))
+                || string.IsNullOrEmpty(path))
             {
                 continue;
             }
@@ -198,30 +209,57 @@ public static class ParameterFiles
             if (environment.TryGetValue(target, out var direct) && !string.IsNullOrEmpty(direct))
             {
                 throw new InvalidOperationException(
-                    $"Both {target} and {name} are set. Set only one of them.");
+                    $"環境変数 '{target}' と '{name}' は同時に指定できません。どちらか一方にしてください。");
             }
 
-            string text;
-            try
-            {
-                text = File.ReadAllText(path).TrimEnd('\r', '\n');
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-            {
-                throw new InvalidOperationException(
-                    $"{name} points to '{path}', which could not be read ({exception.GetType().Name}).",
-                    exception);
-            }
-
-            if (text.Length == 0)
-            {
-                throw new InvalidOperationException($"{name} points to '{path}', which is empty.");
-            }
-
-            values[target] = text;
+            values[target] = ReadFile(name, path);
         }
 
         return values;
+    }
+
+    private static string ReadFile(string name, string path)
+    {
+        if (!Path.IsPathFullyQualified(path))
+        {
+            throw new InvalidOperationException($"環境変数 '{name}' には絶対パスを指定してください。");
+        }
+
+        string value;
+        try
+        {
+            var file = new FileInfo(path);
+            if (!file.Exists)
+            {
+                throw new InvalidOperationException($"環境変数 '{name}' のファイルが見つかりません: {path}");
+            }
+
+            if (file.Length > MaximumFileSizeBytes)
+            {
+                throw new InvalidOperationException($"環境変数 '{name}' のファイルが大きすぎます（{MaximumFileSizeBytes / 1024} KB まで）: {path}");
+            }
+
+            value = File.ReadAllText(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
+        {
+            throw new InvalidOperationException(
+                $"環境変数 '{name}' のファイルを読み取れません: {path}（{exception.GetType().Name}）", exception);
+        }
+
+        // 末尾の改行を 1 つだけ落とす（echo やエディタが付ける）
+        if (value.EndsWith("\r\n", StringComparison.Ordinal))
+        {
+            value = value[..^2];
+        }
+        else if (value.EndsWith('\n'))
+        {
+            value = value[..^1];
+        }
+
+        return value.Length == 0
+            ? throw new InvalidOperationException($"環境変数 '{name}' のファイルは空です: {path}")
+            : value;
     }
 
     /// <summary>実際に置いてあるファイルの名前。</summary>

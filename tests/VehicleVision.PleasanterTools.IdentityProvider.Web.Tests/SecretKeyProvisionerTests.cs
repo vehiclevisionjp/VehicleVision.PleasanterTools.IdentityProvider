@@ -77,6 +77,20 @@ public sealed class SecretKeyProvisionerTests : IDisposable
     }
 
     [Fact]
+    public void 自動生成を止めていれば_作らずに止める()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection([new KeyValuePair<string, string?>(SecretKeyProvisioner.AutoGenerateSetting, "false")])
+            .Build();
+
+        var error = Assert.Throws<InvalidOperationException>(
+            () => SecretKeyProvisioner.Resolve(configuration, directory, out _));
+
+        Assert.Contains("IDP_SECRET_KEY", error.Message, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(directory));
+    }
+
+    [Fact]
     public void 書けなければ分かる言葉で止める()
     {
         Directory.CreateDirectory(directory);
