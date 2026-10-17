@@ -67,7 +67,7 @@ export const ja = {
   'accessRules.kind.user': 'ユーザー',
   'accessRules.kind.dept': '組織',
   'accessRules.kind.group': 'グループ',
-  'accessRules.query': '名前で探す（空なら先頭から）',
+  'accessRules.query': '名前で探す',
   'accessRules.search': '探す',
   'accessRules.noResults': '見つからない（自分のテナントの、無効でないものだけを探す）。',
   'accessRules.add': '追加',
