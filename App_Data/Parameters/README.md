@@ -42,6 +42,7 @@
 | `IDP_SECRET_KEY` | IdP が保存する秘密（署名鍵など）を守る鍵。**無ければ、起動時に作って `Service.local.json` へ保存する**（単一インスタンス向け。控えを取ること）。**失うと保存済みの秘密が全て使えなくなる。** 本番では Key Vault などへ置き、控えを取ること。`openssl rand -base64 32` で作れる |
 | `IDP_ISSUER` | IdP の外から見える URL。SAML の EntityID と OIDC の `iss` になる。**公開 URL と必ず一致させること**（検証環境の既定 `http://localhost:8081`） |
 
+- **配置先ごとの与え方（systemd・IIS・Windows・Docker・Kubernetes）は、[`_documents/導入-更新運用手順書.md`](../../_documents/導入-更新運用手順書.md) の「設定の与え方（配置先ごと）」。**
 - 上の表は **最小の起動に要るもの**。設定を増やしたときは、この表と
   [`_documents/開発環境.md`](../../_documents/開発環境.md) の環境変数の節へ追記すること
 - **ここにある環境変数は、`Rds.json`（DB）と `Service.json`（`SecretKey` など）でも指定できる**（下の「ファイル」の表）。
