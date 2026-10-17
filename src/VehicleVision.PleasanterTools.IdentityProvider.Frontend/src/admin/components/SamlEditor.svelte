@@ -26,6 +26,7 @@
     type SamlFormField,
     type SamlFormState,
   } from '../lib/validation';
+  import AccessRulesEditor from './AccessRulesEditor.svelte';
   import ErrorBanner from './ErrorBanner.svelte';
 
   interface Props {
@@ -354,6 +355,8 @@
       <span class="hint" id="saml-tenants-hint">{t('common.tenantIds.hint')}</span>
       {#if message('tenantIds')}<span class="error-text" role="alert">{message('tenantIds')}</span>{/if}
     </div>
+
+    <AccessRulesEditor bind:rules={form.accessRules} error={message('accessRules')} idPrefix="saml-rules" />
 
     <div class="check">
       <input id="saml-enabled" type="checkbox" bind:checked={form.enabled} />

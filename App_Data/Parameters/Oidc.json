@@ -1,0 +1,15 @@
+{
+    "//": "OpenID Connect の設定。値を変えるときは Oidc.local.json（git 管理外）か環境変数で上書きする",
+
+    "//AuthorizationCodeLifetimeSeconds": "認可コードの有効時間（秒）。コードは 1 度しか使えない。10〜600",
+    "AuthorizationCodeLifetimeSeconds": 60,
+
+    "//AccessTokenLifetimeSeconds": "アクセストークンの既定の有効時間（秒）。クライアントごとに上書きできる。60〜86400",
+    "AccessTokenLifetimeSeconds": 600,
+
+    "//IdTokenLifetimeSeconds": "ID トークンの有効時間（秒）。60〜86400",
+    "IdTokenLifetimeSeconds": 600,
+
+    "//RefreshTokenLifetimeSeconds": "リフレッシュトークンの既定の有効時間（秒）。使うたびに新しいものへ替わる。クライアントごとに上書きできる。300〜31536000",
+    "RefreshTokenLifetimeSeconds": 2592000
+}
