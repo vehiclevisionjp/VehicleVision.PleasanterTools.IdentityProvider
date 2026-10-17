@@ -34,9 +34,14 @@ builder.Services.AddSingleton<HtmlShell>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // **署名・暗号化に使う鍵。** 失うと、保存した署名鍵が復号できなくなる。
-// App Service の設定か Key Vault に置き、控えを取っておくこと
-var secretKeyText = builder.Configuration["IDP_SECRET_KEY"]
-    ?? throw new InvalidOperationException("IDP_SECRET_KEY is not set (Base64 of 32 bytes; generate with --generate-secret-key).");
+// App Service の設定か Key Vault に置き、控えを取っておくこと。
+// **無いときだけ、新しく作って Service.local.json（git 管理外）へ残す**（初回起動の手間を省く。
+// 複数インスタンス・使い捨てのファイルシステムでは明示的に与えること）
+var secretKeyText = SecretKeyProvisioner.Resolve(
+    builder.Configuration,
+    builder.Configuration[ParameterFiles.DirectoryKey]
+        ?? ParameterFiles.ResolveDirectory(builder.Environment.ContentRootPath, ParameterFiles.DefaultDirectory),
+    out var generatedSecretKeyPath);
 var secretKey = SecretProtector.DecodeKey(secretKeyText);
 builder.Services.AddSingleton(new SecretProtector(secretKeyText));
 builder.Services.AddSingleton(new CookieSigner(secretKey));
@@ -259,6 +264,23 @@ try
         databaseStartupState,
         app.Logger,
         app.Lifetime.ApplicationStopping);
+
+    // **自動で作った鍵は、署名鍵がまだ無い DB でだけ使える。** 鍵を失った DB の署名鍵は復号できない
+    if (generatedSecretKeyPath is not null)
+    {
+        if ((await app.Services.GetRequiredService<ISigningKeyStore>().ListAsync(app.Lifetime.ApplicationStopping)).Count > 0)
+        {
+            await SecretKeyProvisioner.DiscardAsync(generatedSecretKeyPath);
+            throw new InvalidOperationException(
+                "IDP_SECRET_KEY was not set and a new key was generated, but the database already has signing keys "
+                + "encrypted with the original key. Set IDP_SECRET_KEY to the original key. The generated key was discarded.");
+        }
+
+        app.Logger.LogWarning(
+            "IDP_SECRET_KEY was not set, so a new key was generated and saved to {Path}. "
+            + "Back it up: losing it makes the stored signing keys unreadable. Set it explicitly for multiple instances or disposable file systems.",
+            generatedSecretKeyPath);
+    }
 
     // 署名鍵が無ければ作る（初回起動）
     await app.Services.GetRequiredService<SigningKeyService>().EnsureAsync(app.Lifetime.ApplicationStopping);

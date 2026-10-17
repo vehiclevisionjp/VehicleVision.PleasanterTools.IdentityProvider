@@ -39,11 +39,14 @@
 | `IDP_PLEASANTER_DB_CONNECTIONSTRING` | Pleasanter の DB への接続文字列。**資格情報を含む** |
 | `IDP_DB_PROVIDER` | IdP 自身の DB の種類 |
 | `IDP_DB_CONNECTIONSTRING` | IdP 自身の DB への接続文字列。**資格情報を含む** |
-| `IDP_SECRET_KEY` | IdP が保存する秘密（署名鍵など）を守る鍵。**失うと保存済みの秘密が全て使えなくなる。** 本番では Key Vault などへ置き、控えを取ること。`openssl rand -base64 32` で作れる |
+| `IDP_SECRET_KEY` | IdP が保存する秘密（署名鍵など）を守る鍵。**無ければ、起動時に作って `Service.local.json` へ保存する**（単一インスタンス向け。控えを取ること）。**失うと保存済みの秘密が全て使えなくなる。** 本番では Key Vault などへ置き、控えを取ること。`openssl rand -base64 32` で作れる |
 | `IDP_ISSUER` | IdP の外から見える URL。SAML の EntityID と OIDC の `iss` になる。**公開 URL と必ず一致させること**（検証環境の既定 `http://localhost:8081`） |
 
+- **配置先ごとの与え方（systemd・IIS・Windows・Docker・Kubernetes）は、[`_documents/導入-更新運用手順書.md`](../../_documents/導入-更新運用手順書.md) の「設定の与え方（配置先ごと）」。**
 - 上の表は **最小の起動に要るもの**。設定を増やしたときは、この表と
   [`_documents/開発環境.md`](../../_documents/開発環境.md) の環境変数の節へ追記すること
+- **ここにある環境変数は、`Rds.json`（DB）と `Service.json`（`SecretKey` など）でも指定できる**（下の「ファイル」の表）。
+  環境変数が `.json` より強く、`.local.json` が一番強い
 - **環境変数の接頭辞は `IDP_`。** 階層は `_` 区切りで、小文字・大文字は区別しない
 
 ## ファイル
@@ -62,16 +65,20 @@
 
 | ファイル | 内容 | 読まれているか |
 |---|---|---|
-| `Service.json` | `Issuer` | ✅ |
+| `Service.json` | `Issuer`・`SecretKey`・`AllowInsecure`・`PathBase`・`ForwardedNetworks`・`HealthNetworks` | ✅ |
+| `Rds.json` | DB（`Pleasanter` と `Idp`。種類は `Dbms`、接続文字列、暗号化の検査、起動時のマイグレーション） | ✅ |
 | `Session.json` | SSO セッションの有効時間・無操作の許容時間 | ✅ |
 | `Oidc.json` | 認可コード・アクセストークン・ID トークン・リフレッシュトークンの有効時間 | ✅ |
 | `Saml.json` | アサーションの有効時間 | ✅ |
 | `RateLimit.json` | ログイン・トークンの IP ごとの上限（`Login.PerMinute` / `Token.PerMinute`） | ✅ |
-| `Admin.json` | 管理画面へ入れる人（`Role` / `LoginIds` / `Include` / `Exclude`） | ✅ |
+| `Admin.json` | 管理画面の入口（`Path`）と、入れる人（`Role` / `LoginIds` / `Include` / `Exclude`） | ✅ |
+| `Audit.json` | 監査ログの保持期間 | ✅ |
 | `Security.json` | ログイン失敗の締め出し・TOTP（`SecondaryAuthentication` は Pleasanter と同じ形） | ✅ |
 
 - **配列は `.local.json` と添字ごとに重なる**（Pleasanter 本体と同じ JSON の読み方）。`.local.json` の配列が基より短いと、
   基の残りの要素が残る。配列を差し替えるときは、基と同じ要素数で書くか、環境変数（`IDP_ADMIN_INCLUDE` など）を使う
+- **環境変数で指定できるものは、すべてこれらのファイルでも指定できる。** 接続文字列や `SecretKey` の実値は、コミットする `.json` ではなく
+  `{名前}.local.json`（git 管理外）か環境変数で与える。配列（`ForwardedNetworks` など）は環境変数ではカンマ区切りの 1 つの値
 - 一覧と環境変数の対応は [`_documents/設定パラメータ一覧.md`](../../_documents/設定パラメータ一覧.md)
 
 ## 検証環境の値

@@ -4,6 +4,9 @@
     "//Role": "管理画面へ入れる Pleasanter 上の役割。TenantManager（テナント管理者以上。既定）か ServiceManager（システム管理者だけ）。Pleasanter の既定の管理者 Administrator は TenantManager だけを持つ。システム管理者の列は実機ではほぼ使われない",
     "Role": "TenantManager",
 
+    "//Path": "管理画面の入口。小文字・数字・ハイフンのみ（先頭は /）。API は /api/admin のまま変わらない",
+    "Path": "/admin",
+
     "//LoginIds": "ログイン ID で絞る。空なら絞らない。**絞るだけで、Role を満たさない人を管理者にすることはできない**。環境変数 IDP_ADMIN_LOGIN_IDS（カンマ区切り）を与えると、この配列の代わりに使う",
     "LoginIds": [],
 
