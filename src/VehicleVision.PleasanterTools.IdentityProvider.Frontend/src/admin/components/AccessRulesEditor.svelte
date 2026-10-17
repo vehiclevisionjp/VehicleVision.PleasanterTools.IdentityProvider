@@ -73,10 +73,6 @@
     add(kind, id, null);
     manualId = '';
   }
-
-  function describe(rule: AccessRule): string {
-    return rule.label ?? `#${rule.targetId}`;
-  }
 </script>
 
 <fieldset class="field access-rules" aria-describedby={`${idPrefix}-hint`}>
@@ -94,7 +90,7 @@
             {t(EFFECT_KEYS[rule.effect])}
           </span>
           <span>{t(KIND_KEYS[rule.kind])}</span>
-          <strong>{describe(rule)}</strong>
+          {#if rule.label}<strong>{rule.label}</strong>{/if}
           <code class="mono">#{rule.targetId}</code>
           <button type="button" class="link" onclick={() => remove(index)}>{t('accessRules.remove')}</button>
         </li>

@@ -69,7 +69,7 @@ export const en: Record<keyof typeof ja, string> = {
   'accessRules.kind.user': 'User',
   'accessRules.kind.dept': 'Department',
   'accessRules.kind.group': 'Group',
-  'accessRules.query': 'Search by name (empty lists the first ones)',
+  'accessRules.query': 'Search by name',
   'accessRules.search': 'Search',
   'accessRules.noResults': 'Nothing found (only enabled entries in your own tenant are searched).',
   'accessRules.add': 'Add',
