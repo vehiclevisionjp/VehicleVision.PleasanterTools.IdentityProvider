@@ -32,7 +32,7 @@ public static class ParameterFiles
 
     /// <summary>読む対象。**この順に積む**（後のものが勝つわけではない。別名の写しで揃える）。</summary>
     private static readonly ImmutableArray<string> Names =
-        ["Service", "Session", "Oidc", "Saml", "RateLimit", "Admin", "Security"];
+        ["Service", "Rds", "Session", "Oidc", "Saml", "RateLimit", "Admin", "Audit", "Security"];
 
     /// <summary>
     /// キーの先頭へ、ファイル名を付けずに読むファイル。
@@ -53,6 +53,22 @@ public static class ParameterFiles
         {
             // Service.json
             ["Service:Issuer"] = "IDP_ISSUER",
+            ["Service:SecretKey"] = "IDP_SECRET_KEY",
+            ["Service:AllowInsecure"] = "IDP_ALLOW_INSECURE",
+            ["Service:PathBase"] = "IDP_PATH_BASE",
+            ["Service:ForwardedNetworks"] = "IDP_FORWARDED_NETWORKS",
+            ["Service:HealthNetworks"] = "IDP_HEALTH_NETWORKS",
+
+            // Rds.json（Pleasanter の DB と IdP 自身の DB。Pleasanter 本体の Rds.json にならい、DBMS の種類は Dbms）
+            ["Rds:Pleasanter:Dbms"] = "IDP_PLEASANTER_DB_PROVIDER",
+            ["Rds:Pleasanter:ConnectionString"] = "IDP_PLEASANTER_DB_CONNECTIONSTRING",
+            ["Rds:Pleasanter:AllowInsecure"] = "IDP_PLEASANTER_DB_ALLOW_INSECURE",
+            ["Rds:Idp:Dbms"] = "IDP_DB_PROVIDER",
+            ["Rds:Idp:ConnectionString"] = "IDP_DB_CONNECTIONSTRING",
+            ["Rds:Idp:AllowInsecure"] = "IDP_DB_ALLOW_INSECURE",
+            ["Rds:Idp:AutoMigrate"] = "IDP_DB_AUTO_MIGRATE",
+            ["Rds:Idp:MigrationLockTimeoutSeconds"] = "IDP_DB_MIGRATION_LOCK_TIMEOUT_SECONDS",
+            ["Rds:Idp:SkipMigrationCheck"] = "IDP_DB_SKIP_MIGRATION_CHECK",
 
             // Session.json
             ["Session:LifetimeMinutes"] = "IDP_SESSION_LIFETIME_MINUTES",
@@ -73,6 +89,10 @@ public static class ParameterFiles
 
             // Admin.json（配列の Include / Exclude / LoginIds は IdpOptions が階層のまま読む）
             ["Admin:Role"] = "IDP_ADMIN_ROLE",
+            ["Admin:Path"] = "IDP_ADMIN_PATH",
+
+            // Audit.json
+            ["Audit:RetentionDays"] = "IDP_AUDIT_RETENTION_DAYS",
 
             // Security.json
             ["LoginMaxFailures"] = "IDP_LOGIN_MAX_FAILURES",
@@ -206,6 +226,15 @@ public static class ParameterFiles
         }
     }
 
+    private static string? JoinedChildren(IConfiguration configuration, string key)
+    {
+        var values = configuration.GetSection(key).GetChildren()
+            .Select(child => child.Value?.Trim())
+            .Where(value => !string.IsNullOrEmpty(value));
+        var joined = string.Join(',', values);
+        return joined.Length == 0 ? null : joined;
+    }
+
     private static IEnumerable<KeyValuePair<string, string?>> Flatten(IConfiguration configuration)
     {
         foreach (var child in configuration.GetChildren())
@@ -239,7 +268,8 @@ public static class ParameterFiles
 
         foreach (var (key, setting) in Aliases)
         {
-            var value = configuration[key];
+            // **配列は、カンマ区切りの 1 つの値へ畳む**（環境変数と同じ形で読む設定のため）
+            var value = configuration[key] ?? JoinedChildren(configuration, key);
 
             // **null と空は写さない。** 環境変数で与えた値を塗り潰さないため
             if (!string.IsNullOrEmpty(value))

@@ -1,0 +1,6 @@
+{
+    "//": "監査ログの設定。値を変えるときは Audit.local.json（git 管理外）か環境変数で上書きする",
+
+    "//RetentionDays": "監査ログを残す日数。0 なら消さない。環境変数 IDP_AUDIT_RETENTION_DAYS",
+    "RetentionDays": 365
+}
