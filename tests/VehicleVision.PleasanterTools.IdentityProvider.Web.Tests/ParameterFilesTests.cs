@@ -155,4 +155,56 @@ public sealed class ParameterFilesTests : IDisposable
         Assert.Equal("300", configuration["IDP_DB_MIGRATION_LOCK_TIMEOUT_SECONDS"]);
         Assert.Equal("TenantManager", configuration["IDP_ADMIN_ROLE"]);
     }
+
+    private string SecretFile(string content)
+    {
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "secret-" + Guid.NewGuid().ToString("N"));
+        File.WriteAllText(path, content);
+        return path;
+    }
+
+    private static Dictionary<string, string?> Env(params (string Name, string Value)[] values) =>
+        values.ToDictionary(pair => pair.Name, pair => (string?)pair.Value, StringComparer.Ordinal);
+
+    [Fact]
+    public void FILEの環境変数はファイルの中身を値にし_末尾の改行だけ落とす()
+    {
+        var values = ParameterFiles.ValuesFromFiles(Env(
+            ("IDP_SECRET_KEY_FILE", SecretFile("abc==\n")),
+            ("IDP_DB_CONNECTIONSTRING_FILE", SecretFile(" Server=a;PWD=p w \r\n")),
+            ("OTHER_FILE", SecretFile("ignored"))));
+
+        Assert.Equal("abc==", values["IDP_SECRET_KEY"]);
+        Assert.Equal(" Server=a;PWD=p w ", values["IDP_DB_CONNECTIONSTRING"]);
+        Assert.Equal(2, values.Count);
+    }
+
+    [Fact]
+    public void FILEが空欄や名前だけなら無視する()
+    {
+        Assert.Empty(ParameterFiles.ValuesFromFiles(Env(("IDP_X_FILE", " "), ("IDP__FILE", "x"), ("IDP_FILE", "x"))));
+    }
+
+    [Fact]
+    public void 同じ設定を直接とFILEの両方で与えたら止める()
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(
+            ("IDP_SECRET_KEY", "direct"), ("IDP_SECRET_KEY_FILE", SecretFile("file")))));
+
+        Assert.Contains("IDP_SECRET_KEY", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("direct", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ファイルが無い_読めない_空なら止め_値は出さない()
+    {
+        Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(
+            ("IDP_SECRET_KEY_FILE", Path.Combine(directory, "missing")))));
+        Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(
+            ("IDP_SECRET_KEY_FILE", SecretFile("\n")))));
+        Directory.CreateDirectory(directory);
+        Assert.Throws<InvalidOperationException>(() => ParameterFiles.ValuesFromFiles(Env(
+            ("IDP_SECRET_KEY_FILE", directory))));
+    }
 }

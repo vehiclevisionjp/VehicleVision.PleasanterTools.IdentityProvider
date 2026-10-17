@@ -135,6 +135,9 @@ public static class ParameterFiles
         // ---- 2. 環境変数
         builder.AddEnvironmentVariables();
 
+        // ---- 2'. IDP_*_FILE（Docker secrets など、値をファイルから読む。環境変数と同じ強さ）
+        builder.AddInMemoryCollection(ValuesFromFiles(EnvironmentSnapshot()));
+
         // ---- 3. {名前}.local.json（一番強い。git 管理外）
         builder.AddInMemoryCollection(ValuesOf(resolved, local: true));
         builder.AddInMemoryCollection(AliasesOf(resolved, local: true));
@@ -145,6 +148,80 @@ public static class ParameterFiles
             new KeyValuePair<string, string?>(DirectoryKey, resolved),
             new KeyValuePair<string, string?>(FoundFilesKey, string.Join(" / ", FoundIn(resolved))),
         ]);
+    }
+
+    /// <summary>値をファイルから読む環境変数の接尾辞（<c>IDP_X_FILE</c> → <c>IDP_X</c>）。</summary>
+    public const string FileSuffix = "_FILE";
+
+    /// <summary>環境変数の接頭辞。<c>IDP_</c> で始まるものだけを対象にする。</summary>
+    private const string EnvironmentPrefix = "IDP_";
+
+    private static Dictionary<string, string?> EnvironmentSnapshot()
+    {
+        var snapshot = new Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            snapshot[(string)entry.Key] = entry.Value as string;
+        }
+
+        return snapshot;
+    }
+
+    /// <summary>
+    /// <c>IDP_X_FILE=/run/secrets/x</c> を、<c>IDP_X</c> = ファイルの中身へ直す（Docker secrets・Kubernetes の Secret のマウント用）。
+    /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item><b>末尾の改行だけ</b>を落とす（先頭・途中の空白は値の一部）。</item>
+    /// <item><b><c>IDP_X</c> と <c>IDP_X_FILE</c> の両方があれば止める。</b>どちらが効くか曖昧なため。</item>
+    /// <item><b>無い・読めない・空のファイルも止める。</b>黙って既定へ落とすと、鍵や接続先が変わったことに気付けない。</item>
+    /// <item><b>値はメッセージへ出さない。</b>パスだけ出す。</item>
+    /// </list>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">上のいずれかに当たるとき。</exception>
+    public static IReadOnlyDictionary<string, string?> ValuesFromFiles(IReadOnlyDictionary<string, string?> environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (var (name, path) in environment)
+        {
+            if (!name.StartsWith(EnvironmentPrefix, StringComparison.Ordinal)
+                || !name.EndsWith(FileSuffix, StringComparison.Ordinal)
+                || name.Length <= EnvironmentPrefix.Length + FileSuffix.Length
+                || string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+
+            var target = name[..^FileSuffix.Length];
+            if (environment.TryGetValue(target, out var direct) && !string.IsNullOrEmpty(direct))
+            {
+                throw new InvalidOperationException(
+                    $"Both {target} and {name} are set. Set only one of them.");
+            }
+
+            string text;
+            try
+            {
+                text = File.ReadAllText(path).TrimEnd('\r', '\n');
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                throw new InvalidOperationException(
+                    $"{name} points to '{path}', which could not be read ({exception.GetType().Name}).",
+                    exception);
+            }
+
+            if (text.Length == 0)
+            {
+                throw new InvalidOperationException($"{name} points to '{path}', which is empty.");
+            }
+
+            values[target] = text;
+        }
+
+        return values;
     }
 
     /// <summary>実際に置いてあるファイルの名前。</summary>
