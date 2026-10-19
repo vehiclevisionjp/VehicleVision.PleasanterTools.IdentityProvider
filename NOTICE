@@ -74,6 +74,6 @@ Copyright (C) PMC Co.,Ltd.
   xunit.runner.visualstudio 4.0.1 / Apache-2.0
   Microsoft.NET.Test.Sdk 18.10.1 / MIT
   coverlet.collector 10.1.0 / MIT
-  Microsoft.Extensions.TimeProvider.Testing 10.10.0 / MIT
+  Microsoft.Extensions.TimeProvider.Testing 10.11.0 / MIT
 
 **依存を追加したら、ここへ追記してからコミットすること。**
