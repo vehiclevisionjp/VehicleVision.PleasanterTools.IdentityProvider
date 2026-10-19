@@ -1,3 +1,4 @@
+using VehicleVision.PleasanterTools.IdentityProvider.Core.Admin;
 using VehicleVision.PleasanterTools.IdentityProvider.Core.Pleasanter;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Web;
@@ -5,10 +6,10 @@ namespace VehicleVision.PleasanterTools.IdentityProvider.Web;
 /// <summary>管理画面へ入れる Pleasanter 上の役割。</summary>
 public enum AdminRole
 {
-    /// <summary>システム管理者（<c>Users.ServiceManager</c>）。**既定。**</summary>
+    /// <summary>システム管理者（<c>Users.ServiceManager</c>）だけ。</summary>
     ServiceManager,
 
-    /// <summary>テナント管理者（<c>Users.TenantManager</c>）以上。</summary>
+    /// <summary>テナント管理者（<c>Users.TenantManager</c>）以上。**既定。**</summary>
     TenantManager,
 }
 
@@ -52,10 +53,17 @@ public sealed record IdpOptions
 
     public TotpPolicy Totp { get; init; } = TotpPolicy.Default;
 
-    public AdminRole AdminRole { get; init; } = AdminRole.ServiceManager;
+    public AdminRole AdminRole { get; init; } = AdminRole.TenantManager;
 
     /// <summary>空なら <see cref="AdminRole"/> を満たす全員。値があれば、その中でさらに絞る。</summary>
     public IReadOnlyList<string> AdminLoginIds { get; init; } = [];
+
+    /// <summary>管理画面へ入れる人へ重ねる Include / Exclude（<c>IDP_ADMIN_INCLUDE</c> / <c>IDP_ADMIN_EXCLUDE</c>）。</summary>
+    /// <remarks>
+    /// <see cref="AdminRole"/> と <see cref="AdminLoginIds"/> を満たしたうえで、さらにこれを通る人だけが入れる。
+    /// **設定でだけ持つ**（管理画面から変えられると、権限の奪い合いと締め出しの道になる）。
+    /// </remarks>
+    public IReadOnlyList<AccessRule> AdminAccessRules { get; init; } = [];
 
     /// <summary>Issuer が https で配信されているか。cookie の <c>Secure</c> を決める。</summary>
     public bool IsSecure => Issuer.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
@@ -104,15 +112,65 @@ public sealed record IdpOptions
                 Enum(configuration, "IDP_TOTP_MODE", TotpMode.Auto),
                 Enum(configuration, "SecondaryAuthentication:Mode", PleasanterSecondaryAuthenticationMode.None),
                 tolerances),
-            AdminRole = Enum(configuration, "IDP_ADMIN_ROLE", AdminRole.ServiceManager),
+            AdminRole = Enum(configuration, "IDP_ADMIN_ROLE", AdminRole.TenantManager),
+            AdminAccessRules = AdminRules(configuration),
             AdminLoginIds =
             [
-                .. (configuration["IDP_ADMIN_LOGIN_IDS"] ?? string.Empty)
-                    .Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .. (string.IsNullOrWhiteSpace(configuration["IDP_ADMIN_LOGIN_IDS"])
+                        ? Values(configuration, "Admin:LoginIds")
+                        : (configuration["IDP_ADMIN_LOGIN_IDS"] ?? string.Empty)
+                            .Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     .Select(id => id.ToLowerInvariant()),
             ],
         };
     }
+
+    /// <summary><c>Admin.json</c> の <c>Include</c> / <c>Exclude</c>（配列）か、環境変数の文字列から読む。</summary>
+    /// <remarks>
+    /// <b>環境変数（<c>IDP_ADMIN_INCLUDE</c> / <c>IDP_ADMIN_EXCLUDE</c>）があれば、その側（Include / Exclude）の
+    /// ファイルの値の代わりに使う。</b>
+    /// </remarks>
+    private static List<AccessRule> AdminRules(IConfiguration configuration)
+    {
+        try
+        {
+            return
+            [
+                .. AdminRulesOf(configuration, "IDP_ADMIN_INCLUDE", "Admin:Include", AccessRules.Include),
+                .. AdminRulesOf(configuration, "IDP_ADMIN_EXCLUDE", "Admin:Exclude", AccessRules.Exclude),
+            ];
+        }
+        catch (FormatException exception)
+        {
+            // **誤った設定で黙って全員を通さない。** 起動で止める
+            throw new InvalidOperationException("管理画面の Include / Exclude の設定: " + exception.Message, exception);
+        }
+    }
+
+    private static IEnumerable<AccessRule> AdminRulesOf(IConfiguration configuration, string envKey, string section, string effect)
+    {
+        if (!string.IsNullOrWhiteSpace(configuration[envKey]))
+        {
+            return AccessRules.ParseList(configuration[envKey], effect);
+        }
+
+        return
+        [
+            .. Values(configuration, section + ":Users").Select(id => ParseId(id, AccessRules.User, effect)),
+            .. Values(configuration, section + ":Depts").Select(id => ParseId(id, AccessRules.Dept, effect)),
+            .. Values(configuration, section + ":Groups").Select(id => ParseId(id, AccessRules.Group, effect)),
+        ];
+    }
+
+    private static AccessRule ParseId(string text, string kind, string effect) =>
+        AccessRules.ParseList($"{kind}:{text}", effect)[0];
+
+    /// <summary>配列（<c>キー:0</c>, <c>キー:1</c>…）の値。空の要素は除く。</summary>
+    private static IEnumerable<string> Values(IConfiguration configuration, string key) =>
+        configuration.GetSection(key).GetChildren()
+            .Select(child => child.Value?.Trim())
+            .Where(value => !string.IsNullOrEmpty(value))
+            .Select(value => value!);
 
     /// <summary>1 以上の整数（上限は 1,000,000）。未設定なら既定値。</summary>
     public static int PositiveInt(IConfiguration configuration, string key, int fallback) =>

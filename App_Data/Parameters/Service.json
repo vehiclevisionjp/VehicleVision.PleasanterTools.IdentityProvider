@@ -1,33 +1,18 @@
 {
-    "//": "IdP の動作設定。値を変えるときは Service.local.json（git 管理外）か環境変数で上書きする。環境変数の名前は App_Data/Parameters/README.md の対応表を参照。⚠️ 資格情報（DB の接続文字列・IDP_SECRET_KEY）はここへ書かない",
+    "//": "IdP 本体の設定。値を変えるときは Service.local.json（git 管理外）か環境変数で上書きする。環境変数の名前は App_Data/Parameters/README.md の対応表を参照。⚠️ 資格情報（DB の接続文字列・IDP_SECRET_KEY）はここへ書かない。セッション・トークン・管理画面などは、Pleasanter 本体と同じく話題ごとに別のファイル（Session.json / Oidc.json / Saml.json / RateLimit.json / Admin.json / Security.json）へ分けてある",
 
     "//Issuer": "この IdP の外から見える URL（末尾の / なし）。OIDC の iss と SAML の EntityID（{Issuer}/saml/metadata）になる。**公開 URL と必ず一致させる。** サブパスへ置くときは IDP_PATH_BASE と合わせて、サブパス込みで書く。http は localhost / ループバックだけ（それ以外は IDP_ALLOW_INSECURE=true が要る）。未設定なら http://localhost:8081",
     "Issuer": null,
 
-    "//SessionLifetimeMinutes": "SSO セッションの絶対的な有効時間（分）。ログインから、この時間が経つと必ず入り直す。5〜43200",
-    "SessionLifetimeMinutes": 480,
+    "//AllowInsecure": "true で、https でない Issuer（localhost / ループバック以外）を許し、HTTPS へのリダイレクトと HSTS を切る。**検証環境だけ。** 本番では設定しない",
+    "AllowInsecure": false,
 
-    "//SessionIdleMinutes": "SSO セッションの無操作の許容時間（分）。最後のアクセスからこの時間が経つと入り直す。1〜43200",
-    "SessionIdleMinutes": 120,
+    "//PathBase": "サブパス（例 /idp）へ置くときのパス。Issuer もサブパス込みで書く。空なら根",
+    "PathBase": null,
 
-    "//AuthorizationCodeLifetimeSeconds": "OIDC の認可コードの有効時間（秒）。コードは 1 度しか使えない。10〜600",
-    "AuthorizationCodeLifetimeSeconds": 60,
+    "//ForwardedNetworks": "信頼するリバースプロキシのネットワーク（CIDR の配列。環境変数 IDP_FORWARDED_NETWORKS はカンマ区切り）。ここからの X-Forwarded-* だけを信じる。空なら信じない",
+    "ForwardedNetworks": [],
 
-    "//AccessTokenLifetimeSeconds": "OIDC のアクセストークンの既定の有効時間（秒）。クライアントごとに上書きできる。60〜86400",
-    "AccessTokenLifetimeSeconds": 600,
-
-    "//IdTokenLifetimeSeconds": "OIDC の ID トークンの有効時間（秒）。60〜86400",
-    "IdTokenLifetimeSeconds": 600,
-
-    "//RefreshTokenLifetimeSeconds": "OIDC のリフレッシュトークンの既定の有効時間（秒）。使うたびに新しいものへ替わる。クライアントごとに上書きできる。300〜31536000",
-    "RefreshTokenLifetimeSeconds": 2592000,
-
-    "//SamlAssertionLifetimeSeconds": "SAML のアサーションの有効時間（秒）。SP がこの間に受け取れなければ無効。30〜3600",
-    "SamlAssertionLifetimeSeconds": 300,
-
-    "//AdminRole": "管理画面へ入れる Pleasanter 上の役割。ServiceManager（システム管理者。既定）か TenantManager（テナント管理者以上）。⚠️ Pleasanter の既定の管理者 Administrator は TenantManager だけを持つので、そのまま使うなら TenantManager にする",
-    "AdminRole": "ServiceManager",
-
-    "//AdminLoginIds": "管理画面へ入れる人をログイン ID で絞る（カンマ区切り）。空なら AdminRole を満たす全員。**絞るだけで、AdminRole を満たさない人を管理者にすることはできない**",
-    "AdminLoginIds": ""
+    "//HealthNetworks": "/healthz と /ready へ入れるネットワーク（CIDR の配列。環境変数 IDP_HEALTH_NETWORKS はカンマ区切り）。空なら制限しない",
+    "HealthNetworks": []
 }

@@ -215,6 +215,12 @@ public static class OidcEndpoints
                     user.UserKey, user.LoginId, "OidcClient", client.ClientId, new { reason = "tenant-not-allowed" }).ConfigureAwait(false);
                 return Fail("access_denied", "The user's tenant is not allowed for this client.");
             }
+            else if (!await AccessCheck.AllowsAsync(users, user, client.AccessRules, http.RequestAborted).ConfigureAwait(false))
+            {
+                await audit.WriteAsync(http, "oidc.authorize.denied", StatusCodes.Status403Forbidden,
+                    user.UserKey, user.LoginId, "OidcClient", client.ClientId, new { reason = "access-rule" }).ConfigureAwait(false);
+                return Fail("access_denied", "The user is not allowed for this client.");
+            }
         }
 
         if (session is null)
@@ -400,7 +406,8 @@ public static class OidcEndpoints
         // **発行のたびに Pleasanter を引き直す。** 無効化された人にトークンを出さない
         var user = await users.FindByUserIdAsync(userId, http.RequestAborted).ConfigureAwait(false);
         if (user is null || user.TenantId != tenantId || LoginGate.Check(user, DateTime.Now) is not LoginDenial.None
-            || (client.AllowedTenantIds.Count > 0 && !client.AllowedTenantIds.Contains(user.TenantId)))
+            || (client.AllowedTenantIds.Count > 0 && !client.AllowedTenantIds.Contains(user.TenantId))
+            || !await AccessCheck.AllowsAsync(users, user, client.AccessRules, http.RequestAborted).ConfigureAwait(false))
         {
             await refreshTokens.RevokeFamilyAsync(familyId, now, http.RequestAborted).ConfigureAwait(false);
             return TokenError("invalid_grant", "The user is no longer allowed to sign in.");

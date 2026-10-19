@@ -190,4 +190,33 @@ public class PleasanterUserStoreTests
 
         Assert.Equal(2, await store.CountUsersAsync());
     }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public async Task 所属するグループのIDが読め_対象を名前で探せる(DatabaseProvider provider)
+    {
+        var (store, seeder) = await CreateAsync(provider);
+        await seeder.AddDeptAsync(1, 20, "開発部");
+        await seeder.AddGroupAsync(1, 30, "管理者グループ");
+        await seeder.AddGroupAsync(1, 31, "部署グループ");
+        await seeder.AddGroupAsync(1, 32, "無関係");
+        await seeder.AddGroupAsync(1, 33, "無効グループ", disabled: true);
+        var userId = await seeder.AddUserAsync("Taro", "x", deptId: 20);
+        await seeder.AddGroupMemberAsync(30, userId: userId);
+        await seeder.AddGroupMemberAsync(31, deptId: 20);
+        await seeder.AddGroupMemberAsync(33, userId: userId);
+
+        var profile = await store.LoadProfileAsync((await store.FindByLoginIdAsync("taro"))!);
+
+        Assert.Equal([30, 31], profile.GroupIds.OrderBy(id => id));
+        Assert.Equal(2, profile.Groups.Count);
+
+        var groups = await store.SearchDirectoryAsync("group", 1, "グループ", 10);
+        Assert.Equal([30, 31], groups.Select(entry => entry.Id).OrderBy(id => id));
+        Assert.Empty(await store.SearchDirectoryAsync("group", 2, "グループ", 10));
+        Assert.Equal(20, Assert.Single(await store.SearchDirectoryAsync("dept", 1, "開発", 10)).Id);
+        var users = await store.SearchDirectoryAsync("user", 1, "TARO", 10);
+        Assert.Equal("Taro", Assert.Single(users).Detail);
+        Assert.Empty(await store.SearchDirectoryAsync("user", 1, "100%", 10));
+    }
 }

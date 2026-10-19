@@ -52,6 +52,32 @@ export interface Status {
   session: { lifetimeMinutes: number; idleMinutes: number };
 }
 
+// ---- アクセスのルール --------------------------------------------------------
+
+export const ACCESS_EFFECTS = ['include', 'exclude'] as const;
+export type AccessEffect = (typeof ACCESS_EFFECTS)[number];
+
+export const ACCESS_KINDS = ['user', 'dept', 'group'] as const;
+export type AccessKind = (typeof ACCESS_KINDS)[number];
+
+/** 連携先へ入れる人を、ユーザー・組織・グループで絞るルール 1 件。 */
+export interface AccessRule {
+  effect: AccessEffect;
+  kind: AccessKind;
+  /** Pleasanter の UserId / DeptId / GroupId */
+  targetId: number;
+  /** 画面に出す名前（登録時のもの）。判定には使わない。 */
+  label: string | null;
+}
+
+/** ルールの対象の候補（Pleasanter のユーザー・組織・グループ）。 */
+export interface DirectoryEntry {
+  id: number;
+  name: string;
+  /** ユーザーのログイン ID */
+  detail: string | null;
+}
+
 // ---- OIDC クライアント -------------------------------------------------------
 
 export const OIDC_SCOPES = ['openid', 'profile', 'email', 'groups', 'offline_access'] as const;
@@ -67,6 +93,7 @@ export interface OidcClient {
   postLogoutRedirectUris: string[];
   allowedScopes: string[];
   allowedTenantIds: number[];
+  accessRules: AccessRule[];
   accessTokenLifetimeSeconds: number | null;
   refreshTokenLifetimeSeconds: number | null;
   enabled: boolean;
@@ -125,6 +152,7 @@ export interface SamlProvider {
   signAssertion: boolean;
   signResponse: boolean;
   allowedTenantIds: number[];
+  accessRules: AccessRule[];
   enabled: boolean;
   createdAt: string;
   updatedAt: string;

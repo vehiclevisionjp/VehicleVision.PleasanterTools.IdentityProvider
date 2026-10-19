@@ -32,7 +32,15 @@ public static class ParameterFiles
 
     /// <summary>読む対象。**この順に積む**（後のものが勝つわけではない。別名の写しで揃える）。</summary>
     private static readonly ImmutableArray<string> Names =
-        ["Service", "Security"];
+        ["Service", "Rds", "Session", "Oidc", "Saml", "RateLimit", "Admin", "Audit", "Security"];
+
+    /// <summary>
+    /// キーの先頭へ、ファイル名を付けずに読むファイル。
+    /// <c>Security.json</c> は Pleasanter 本体と同じ形（<c>SecondaryAuthentication:Mode</c>）のまま読む。
+    /// それ以外は <c>{ファイル名}:{キー}</c>（例 <c>Admin:Include:Users:0</c>）として読む
+    /// （ファイルごとに名前の空間が分かれ、別のファイルのキーとぶつからない）。
+    /// </summary>
+    private const string UnprefixedName = "Security";
 
     /// <summary>ファイルのキー → 正式な設定名（環境変数と同じ名前）。</summary>
     /// <remarks>
@@ -44,22 +52,54 @@ public static class ParameterFiles
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             // Service.json
-            ["Issuer"] = "IDP_ISSUER",
-            ["SessionLifetimeMinutes"] = "IDP_SESSION_LIFETIME_MINUTES",
-            ["SessionIdleMinutes"] = "IDP_SESSION_IDLE_MINUTES",
-            ["AuthorizationCodeLifetimeSeconds"] = "IDP_AUTHORIZATION_CODE_LIFETIME_SECONDS",
-            ["AccessTokenLifetimeSeconds"] = "IDP_ACCESS_TOKEN_LIFETIME_SECONDS",
-            ["IdTokenLifetimeSeconds"] = "IDP_ID_TOKEN_LIFETIME_SECONDS",
-            ["RefreshTokenLifetimeSeconds"] = "IDP_REFRESH_TOKEN_LIFETIME_SECONDS",
-            ["SamlAssertionLifetimeSeconds"] = "IDP_SAML_ASSERTION_LIFETIME_SECONDS",
-            ["AdminRole"] = "IDP_ADMIN_ROLE",
-            ["AdminLoginIds"] = "IDP_ADMIN_LOGIN_IDS",
+            ["Service:Issuer"] = "IDP_ISSUER",
+            ["Service:AllowInsecure"] = "IDP_ALLOW_INSECURE",
+            ["Service:PathBase"] = "IDP_PATH_BASE",
+            ["Service:ForwardedNetworks"] = "IDP_FORWARDED_NETWORKS",
+            ["Service:HealthNetworks"] = "IDP_HEALTH_NETWORKS",
+
+            // Rds.json（Pleasanter の DB と IdP 自身の DB。Pleasanter 本体の Rds.json にならい、DBMS の種類は Dbms）
+            ["Rds:Pleasanter:Dbms"] = "IDP_PLEASANTER_DB_PROVIDER",
+            ["Rds:Pleasanter:ConnectionString"] = "IDP_PLEASANTER_DB_CONNECTIONSTRING",
+            ["Rds:Pleasanter:AllowInsecure"] = "IDP_PLEASANTER_DB_ALLOW_INSECURE",
+            ["Rds:Idp:Dbms"] = "IDP_DB_PROVIDER",
+            ["Rds:Idp:ConnectionString"] = "IDP_DB_CONNECTIONSTRING",
+            ["Rds:Idp:AllowInsecure"] = "IDP_DB_ALLOW_INSECURE",
+            ["Rds:Idp:AutoMigrate"] = "IDP_DB_AUTO_MIGRATE",
+            ["Rds:Idp:MigrationLockTimeoutSeconds"] = "IDP_DB_MIGRATION_LOCK_TIMEOUT_SECONDS",
+            ["Rds:Idp:SkipMigrationCheck"] = "IDP_DB_SKIP_MIGRATION_CHECK",
+
+            // Session.json
+            ["Session:LifetimeMinutes"] = "IDP_SESSION_LIFETIME_MINUTES",
+            ["Session:IdleMinutes"] = "IDP_SESSION_IDLE_MINUTES",
+
+            // Oidc.json
+            ["Oidc:AuthorizationCodeLifetimeSeconds"] = "IDP_AUTHORIZATION_CODE_LIFETIME_SECONDS",
+            ["Oidc:AccessTokenLifetimeSeconds"] = "IDP_ACCESS_TOKEN_LIFETIME_SECONDS",
+            ["Oidc:IdTokenLifetimeSeconds"] = "IDP_ID_TOKEN_LIFETIME_SECONDS",
+            ["Oidc:RefreshTokenLifetimeSeconds"] = "IDP_REFRESH_TOKEN_LIFETIME_SECONDS",
+
+            // Saml.json
+            ["Saml:AssertionLifetimeSeconds"] = "IDP_SAML_ASSERTION_LIFETIME_SECONDS",
+
+            // RateLimit.json（階層は : でたどる。ファイル名が先頭に付く）
+            ["RateLimit:Login:PerMinute"] = "IDP_RATE_LIMIT_LOGIN_PER_MINUTE",
+            ["RateLimit:Token:PerMinute"] = "IDP_RATE_LIMIT_TOKEN_PER_MINUTE",
+
+            // Admin.json（配列の Include / Exclude / LoginIds は IdpOptions が階層のまま読む）
+            ["Admin:Role"] = "IDP_ADMIN_ROLE",
+            ["Admin:Path"] = "IDP_ADMIN_PATH",
+
+            // Audit.json
+            ["Audit:RetentionDays"] = "IDP_AUDIT_RETENTION_DAYS",
 
             // Security.json
             ["LoginMaxFailures"] = "IDP_LOGIN_MAX_FAILURES",
             ["LoginFailureWindowMinutes"] = "IDP_LOGIN_FAILURE_WINDOW_MINUTES",
             ["LoginLockoutMinutes"] = "IDP_LOGIN_LOCKOUT_MINUTES",
             ["TotpMode"] = "IDP_TOTP_MODE",
+            ["SecretKey"] = "IDP_SECRET_KEY",
+            ["SecretKeyAutoGenerate"] = "IDP_SECRET_KEY_AUTOGENERATE",
         }.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>実際に読んだ置き場。**起動時の記録に出す。**</summary>
@@ -90,24 +130,17 @@ public static class ParameterFiles
         var resolved = ResolveDirectory(BasePathOf(builder), directory);
 
         // ---- 1. {名前}.json（一番弱い）
-        foreach (var name in Names)
-        {
-            builder.AddJsonFile(Path.Combine(resolved, $"{name}.json"),
-                optional: true, reloadOnChange: false);
-        }
-
+        builder.AddInMemoryCollection(ValuesOf(resolved, local: false));
         builder.AddInMemoryCollection(AliasesOf(resolved, local: false));
 
         // ---- 2. 環境変数
         builder.AddEnvironmentVariables();
 
-        // ---- 3. {名前}.local.json（一番強い。git 管理外）
-        foreach (var name in Names)
-        {
-            builder.AddJsonFile(Path.Combine(resolved, $"{name}.local.json"),
-                optional: true, reloadOnChange: false);
-        }
+        // ---- 2'. IDP_*_FILE（Docker secrets など、値をファイルから読む。環境変数と同じ強さ）
+        builder.AddInMemoryCollection(ValuesFromFiles(EnvironmentSnapshot()));
 
+        // ---- 3. {名前}.local.json（一番強い。git 管理外）
+        builder.AddInMemoryCollection(ValuesOf(resolved, local: true));
         builder.AddInMemoryCollection(AliasesOf(resolved, local: true));
 
         // ---- 4. 何を読んだかを残す（起動時の記録に出す）
@@ -116,6 +149,117 @@ public static class ParameterFiles
             new KeyValuePair<string, string?>(DirectoryKey, resolved),
             new KeyValuePair<string, string?>(FoundFilesKey, string.Join(" / ", FoundIn(resolved))),
         ]);
+    }
+
+    /// <summary>値をファイルから読む環境変数の接尾辞（<c>IDP_X_FILE</c> → <c>IDP_X</c>）。</summary>
+    public const string FileSuffix = "_FILE";
+
+    /// <summary>環境変数の接頭辞。<c>IDP_</c> で始まるものだけを対象にする。</summary>
+    private const string EnvironmentPrefix = "IDP_";
+
+    /// <summary>秘密のファイルに許す最大の大きさ（バイト）。証明書（PEM）が入る大きさ。</summary>
+    public const int MaximumFileSizeBytes = 64 * 1024;
+
+    private static Dictionary<string, string?> EnvironmentSnapshot()
+    {
+        // Windows の環境変数は大文字小文字を区別しないので、名前の比較も揃える
+        var snapshot = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            snapshot[(string)entry.Key] = entry.Value as string;
+        }
+
+        return snapshot;
+    }
+
+    /// <summary>
+    /// <c>IDP_X_FILE=/run/secrets/x</c> を、<c>IDP_X</c> = ファイルの中身へ直す（Docker secrets・Kubernetes の Secret のマウント用）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// **他のツール（Questionnaire・AtomFeed など）の <c>*_FILE</c> と同じ約束にしてある。**
+    /// 値は環境変数に載らない（<c>docker inspect</c> や <c>/proc/…/environ</c> に出ない）。
+    /// </para>
+    /// <list type="bullet">
+    /// <item><b>末尾の改行を 1 つだけ</b>落とす（<c>\n</c> か <c>\r\n</c>）。複数行（証明書の PEM など）はそのまま読める。</item>
+    /// <item><b>絶対パスだけ</b>を受け付け、<b>64 KB まで</b>。</item>
+    /// <item><b><c>IDP_X</c> と <c>IDP_X_FILE</c> の両方があれば止める。</b>どちらが効くか曖昧なため。値が空の <c>IDP_X</c> は無いものとして扱う。</item>
+    /// <item><b>無い・読めない・大きすぎる・空のファイルも止める。</b>黙って既定へ落とすと、鍵や接続先が変わったことに気付けない。</item>
+    /// <item><b>値はメッセージへ出さない。</b>名前とパスだけ出す。</item>
+    /// <item>環境変数の名前は<b>大文字小文字を区別しない</b>。</item>
+    /// </list>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">上のいずれかに当たるとき。</exception>
+    public static IReadOnlyDictionary<string, string?> ValuesFromFiles(IReadOnlyDictionary<string, string?> environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, path) in environment)
+        {
+            if (!name.StartsWith(EnvironmentPrefix, StringComparison.OrdinalIgnoreCase)
+                || !name.EndsWith(FileSuffix, StringComparison.OrdinalIgnoreCase)
+                || name.Length <= EnvironmentPrefix.Length + FileSuffix.Length
+                || string.IsNullOrEmpty(path))
+            {
+                continue;
+            }
+
+            var target = name[..^FileSuffix.Length];
+            if (environment.TryGetValue(target, out var direct) && !string.IsNullOrEmpty(direct))
+            {
+                throw new InvalidOperationException(
+                    $"環境変数 '{target}' と '{name}' は同時に指定できません。どちらか一方にしてください。");
+            }
+
+            values[target] = ReadFile(name, path);
+        }
+
+        return values;
+    }
+
+    private static string ReadFile(string name, string path)
+    {
+        if (!Path.IsPathFullyQualified(path))
+        {
+            throw new InvalidOperationException($"環境変数 '{name}' には絶対パスを指定してください。");
+        }
+
+        string value;
+        try
+        {
+            var file = new FileInfo(path);
+            if (!file.Exists)
+            {
+                throw new InvalidOperationException($"環境変数 '{name}' のファイルが見つかりません: {path}");
+            }
+
+            if (file.Length > MaximumFileSizeBytes)
+            {
+                throw new InvalidOperationException($"環境変数 '{name}' のファイルが大きすぎます（{MaximumFileSizeBytes / 1024} KB まで）: {path}");
+            }
+
+            value = File.ReadAllText(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
+        {
+            throw new InvalidOperationException(
+                $"環境変数 '{name}' のファイルを読み取れません: {path}（{exception.GetType().Name}）", exception);
+        }
+
+        // 末尾の改行を 1 つだけ落とす（echo やエディタが付ける）
+        if (value.EndsWith("\r\n", StringComparison.Ordinal))
+        {
+            value = value[..^2];
+        }
+        else if (value.EndsWith('\n'))
+        {
+            value = value[..^1];
+        }
+
+        return value.Length == 0
+            ? throw new InvalidOperationException($"環境変数 '{name}' のファイルは空です: {path}")
+            : value;
     }
 
     /// <summary>実際に置いてあるファイルの名前。</summary>
@@ -166,6 +310,62 @@ public static class ParameterFiles
             ? physical.Root
             : Directory.GetCurrentDirectory();
 
+    /// <summary>ファイルの値を、キーの形（階層は <c>:</c>）へ展開して返す。空のファイルや無いファイルは何も返さない。</summary>
+    [SuppressMessage(
+        "Reliability", "CA2000:Dispose objects before losing scope",
+        Justification = "IConfigurationRoot は読み終えた時点で用済み")]
+    private static IEnumerable<KeyValuePair<string, string?>> ValuesOf(string directory, bool local)
+    {
+        var suffix = local ? ".local.json" : ".json";
+        foreach (var name in Names)
+        {
+            var path = Path.Combine(directory, name + suffix);
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            var file = new ConfigurationBuilder().AddJsonFile(path, optional: true, reloadOnChange: false).Build();
+            foreach (var (key, value) in Flatten(file))
+            {
+                // **説明の項目（"//…"）は設定ではない**
+                if (key.Split(':').Any(part => part.StartsWith("//", StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
+                yield return new KeyValuePair<string, string?>(
+                    name == UnprefixedName ? key : $"{name}:{key}",
+                    value);
+            }
+        }
+    }
+
+    private static string? JoinedChildren(IConfiguration configuration, string key)
+    {
+        var values = configuration.GetSection(key).GetChildren()
+            .Select(child => child.Value?.Trim())
+            .Where(value => !string.IsNullOrEmpty(value));
+        var joined = string.Join(',', values);
+        return joined.Length == 0 ? null : joined;
+    }
+
+    private static IEnumerable<KeyValuePair<string, string?>> Flatten(IConfiguration configuration)
+    {
+        foreach (var child in configuration.GetChildren())
+        {
+            if (child.Value is not null)
+            {
+                yield return new KeyValuePair<string, string?>(child.Path, child.Value);
+            }
+
+            foreach (var nested in Flatten(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
     /// <summary>ファイルのキーを正式な名前へ写したものを作る。</summary>
     /// <remarks>
     /// **写す前に一度だけ読む。** 積んだ後の設定から読むと、
@@ -177,20 +377,14 @@ public static class ParameterFiles
             + "ここで破棄すると後続の読み取りが失敗する形にはなっていない")]
     private static IEnumerable<KeyValuePair<string, string?>> AliasesOf(string directory, bool local)
     {
-        var suffix = local ? ".local.json" : ".json";
-        var files = new ConfigurationBuilder();
-
-        foreach (var name in Names)
-        {
-            files.AddJsonFile(Path.Combine(directory, $"{name}{suffix}"),
-                optional: true, reloadOnChange: false);
-        }
-
-        var configuration = files.Build();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(ValuesOf(directory, local))
+            .Build();
 
         foreach (var (key, setting) in Aliases)
         {
-            var value = configuration[key];
+            // **配列は、カンマ区切りの 1 つの値へ畳む**（環境変数と同じ形で読む設定のため）
+            var value = configuration[key] ?? JoinedChildren(configuration, key);
 
             // **null と空は写さない。** 環境変数で与えた値を塗り潰さないため
             if (!string.IsNullOrEmpty(value))
