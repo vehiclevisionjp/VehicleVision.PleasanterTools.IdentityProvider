@@ -228,7 +228,15 @@ public static class AdminEndpoints
         PostLogoutRedirectUris = Clean(body.PostLogoutRedirectUris),
         AllowedScopes = Clean(body.AllowedScopes),
         AllowedTenantIds = [.. (body.AllowedTenantIds ?? []).Distinct()],
+        AccessRules = CleanRules(body.AccessRules),
     };
+
+    private static List<AccessRule> CleanRules(IReadOnlyList<AccessRule>? rules) =>
+        [.. (rules ?? []).Select(rule => new AccessRule(
+            rule.Effect?.Trim().ToLowerInvariant() ?? string.Empty,
+            rule.Kind?.Trim().ToLowerInvariant() ?? string.Empty,
+            rule.TargetId,
+            string.IsNullOrWhiteSpace(rule.Label) ? null : rule.Label.Trim())).DistinctBy(rule => (rule.Effect, rule.Kind, rule.TargetId))];
 
     private static List<string> Clean(IReadOnlyList<string>? values) =>
         [.. (values ?? []).Select(value => value?.Trim() ?? string.Empty).Where(value => value.Length > 0).Distinct(StringComparer.Ordinal)];
@@ -317,6 +325,7 @@ public static class AdminEndpoints
         SigningCertificate = string.IsNullOrWhiteSpace(body.SigningCertificate) ? null : body.SigningCertificate.Trim(),
         AttributeMappings = [.. (body.AttributeMappings ?? []).Select(m => new SamlAttributeMapping(m.AttributeName?.Trim() ?? string.Empty, m.Source?.Trim() ?? string.Empty))],
         AllowedTenantIds = [.. (body.AllowedTenantIds ?? []).Distinct()],
+        AccessRules = CleanRules(body.AccessRules),
     };
 
     /// <summary>SP のメタデータ XML から、登録の下書きを作る（保存はしない）。</summary>
@@ -527,6 +536,23 @@ public static class AdminEndpoints
 
     private static void MapUserLookup(RouteGroupBuilder group)
     {
+        // アクセスのルールの対象（ユーザー・組織・グループ）を、名前で探す。**管理者自身のテナントだけ**
+        group.MapGet("/pleasanter/directory", async (
+            string? kind,
+            string? q,
+            IPleasanterUserStore users,
+            HttpContext http) =>
+        {
+            if (kind is not (AccessRules.User or AccessRules.Dept or AccessRules.Group))
+            {
+                return Problem(400, "validation", "kind は user・dept・group のどれかです。");
+            }
+
+            var entries = await users.SearchDirectoryAsync(
+                kind, Principal(http).User.TenantId, q ?? string.Empty, 20, http.RequestAborted).ConfigureAwait(false);
+            return Results.Json(entries.Select(entry => new { id = entry.Id, name = entry.Name, detail = entry.Detail }));
+        });
+
         group.MapGet("/pleasanter/users/lookup", async (
             string? loginId,
             IPleasanterUserStore users,
@@ -608,7 +634,7 @@ public sealed class AdminFilter(
             return AdminEndpoints.Problem(401, "unauthorized", "サインインし直してください。");
         }
 
-        if (!IsAdmin(user))
+        if (!IsAdmin(user) || !await AccessCheck.AllowsAsync(users, user, options.AdminAccessRules, http.RequestAborted).ConfigureAwait(false))
         {
             return AdminEndpoints.Problem(403, "forbidden", "管理者ではありません。");
         }

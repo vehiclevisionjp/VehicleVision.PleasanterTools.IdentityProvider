@@ -65,6 +65,9 @@ internal sealed class FakePleasanterUserStore(params PleasanterUser[] users) : I
         Task.FromResult(new PleasanterUserProfile(user, [], [], null));
 
     public Task<long> CountUsersAsync(CancellationToken cancellationToken = default) => Task.FromResult((long)users.Length);
+
+    public Task<IReadOnlyList<DirectoryEntry>> SearchDirectoryAsync(string kind, int tenantId, string query, int limit, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DirectoryEntry>>([]);
 }
 
 /// <summary>メモリ上の署名鍵。</summary>

@@ -19,6 +19,7 @@
     type OidcFormField,
     type OidcFormState,
   } from '../lib/validation';
+  import AccessRulesEditor from './AccessRulesEditor.svelte';
   import ErrorBanner from './ErrorBanner.svelte';
   import SecretPanel from './SecretPanel.svelte';
 
@@ -279,6 +280,8 @@
       <span class="hint" id="tenant-ids-hint">{t('common.tenantIds.hint')}</span>
       {#if message('tenantIds')}<span class="error-text" role="alert">{message('tenantIds')}</span>{/if}
     </div>
+
+    <AccessRulesEditor bind:rules={form.accessRules} error={message('accessRules')} idPrefix="oidc-rules" />
 
     <div class="field">
       <label class="label" for="access-lifetime">{t('clients.accessTokenLifetime')}</label>

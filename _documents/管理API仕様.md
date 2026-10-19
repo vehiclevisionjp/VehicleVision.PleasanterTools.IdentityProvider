@@ -57,6 +57,7 @@ OidcClient {
   redirectUris: string[], postLogoutRedirectUris: string[],
   allowedScopes: string[],           // openid profile email groups offline_access のうち
   allowedTenantIds: number[],        // 空なら全テナント
+  accessRules: AccessRule[],         // 空なら絞らない（下記）
   accessTokenLifetimeSeconds: number | null,   // null は既定
   refreshTokenLifetimeSeconds: number | null,
   enabled: boolean, hasSecret: boolean,
@@ -91,6 +92,7 @@ SamlProvider {
                              | "dept" | "groups" | "tenantId" | "language" }[],
   signAssertion: boolean, signResponse: boolean,
   allowedTenantIds: number[],
+  accessRules: AccessRule[],         // 空なら絞らない（下記）
   enabled: boolean, createdAt: string, updatedAt: string }
 ```
 
@@ -146,6 +148,31 @@ AuditLog { occurredAt: string, actorUserKey: string | null, actorLoginId: string
 - `limit` 既定 100・最大 200。新しい順
 - `action` は `auth.login.success` `auth.login.failure` `oidc.token.issued` `saml.response.issued`
   `admin.oidc-client.create` のようなドット区切り。部分一致で絞る
+
+## アクセスのルール `AccessRule`
+
+`OidcClient` と `SamlProvider` の `accessRules` に入れる。**ユーザー・組織・グループで、使える人を絞る。**
+
+```text
+AccessRule {
+  effect: "include" | "exclude",
+  kind: "user" | "dept" | "group",
+  targetId: number,        // Pleasanter の UserId / DeptId / GroupId（1 以上）
+  label: string | null }   // 画面に出す名前（登録時のもの。判定には使わない）
+```
+
+- **`exclude` に当たれば拒否。`include` が 1 件でもあれば、どれかに当たる人だけ。** 空なら絞らない。
+  `allowedTenantIds` とは両方を満たす必要がある
+- 保存時に `effect` / `kind` は小文字へ直し、同じ（`effect`・`kind`・`targetId`）は 1 件へ畳む
+- 同じ対象を `include` と `exclude` の両方へ入れることはできない。上限は 200 件。違反は `400`
+- 評価は、トークンを出すたび（認可・コード交換・リフレッシュ）と SAML の SSO のたびに行う
+
+## Pleasanter の対象の検索
+
+`GET /pleasanter/directory?kind=user|dept|group&q=` → `{ id: number, name: string, detail: string | null }[]`
+
+アクセスのルールの対象を、名前で探す（部分一致・大文字小文字は区別しない。ユーザーはログイン ID も対象）。
+**管理者自身のテナントの、無効でないものだけを、最大 20 件**返す。`kind` が違えば `400`。
 
 ## Pleasanter ユーザの照会（診断用）
 

@@ -70,6 +70,9 @@ public sealed record PleasanterUserProfile(
     IReadOnlyList<string> Groups,
     string? DeptName)
 {
+    /// <summary>所属するグループの <c>GroupId</c>（<see cref="Groups"/> と同じ範囲）。</summary>
+    public IReadOnlyList<int> GroupIds { get; init; } = [];
+
     /// <summary>先頭のメールアドレス（Pleasanter で最初に登録されたもの）。</summary>
     public string? PrimaryMail => MailAddresses.Count > 0 ? MailAddresses[0] : null;
 }

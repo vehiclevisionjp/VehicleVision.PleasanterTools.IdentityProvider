@@ -80,5 +80,5 @@ Pleasanter の初期管理者 `Administrator` は、**初回のログインで�
 IdP でも同じ扱いなので、**先に Pleasanter へログインしてパスワードを変える。**
 
 また `Administrator` は `TenantManager` だけを持ち `ServiceManager` ではない。
-IdP の管理画面へ入れるには、`IDP_ADMIN_ROLE=TenantManager` にするか、Pleasanter でシステム管理者の権限を
-付ける（[`設定パラメータ一覧.md`](設定パラメータ一覧.md)）。
+IdP の管理画面へ入れる役割は既定で `TenantManager`（テナント管理者以上）なので、そのまま入れる
+（絞り方は [`設定パラメータ一覧.md`](設定パラメータ一覧.md) の `Admin.json`）。

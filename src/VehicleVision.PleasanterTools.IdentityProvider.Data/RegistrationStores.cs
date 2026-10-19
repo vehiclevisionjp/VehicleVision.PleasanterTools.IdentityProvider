@@ -41,7 +41,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
 {
     private const string Columns =
         "[ClientId], [DisplayName], [ClientType], [SecretHash], [RedirectUrisJson], "
-        + "[PostLogoutRedirectUrisJson], [AllowedScopesJson], [AllowedTenantIdsJson], "
+        + "[PostLogoutRedirectUrisJson], [AllowedScopesJson], [AllowedTenantIdsJson], [AccessRulesJson], "
         + "[AccessTokenLifetimeSeconds], [RefreshTokenLifetimeSeconds], [Enabled], "
         + "[CreatedAt], [UpdatedAt]";
 
@@ -76,7 +76,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
             await connection.ExecuteAsync(Sql(
                 "INSERT INTO [OidcClients] (" + Columns + ") VALUES (@ClientId, @DisplayName, @ClientType, "
                 + "@SecretHash, @RedirectUrisJson, @PostLogoutRedirectUrisJson, @AllowedScopesJson, "
-                + "@AllowedTenantIdsJson, @AccessTokenLifetimeSeconds, @RefreshTokenLifetimeSeconds, "
+                + "@AllowedTenantIdsJson, @AccessRulesJson, @AccessTokenLifetimeSeconds, @RefreshTokenLifetimeSeconds, "
                 + "@Enabled, @CreatedAt, @UpdatedAt)",
                 new
                 {
@@ -88,6 +88,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
                     PostLogoutRedirectUrisJson = Json(client.PostLogoutRedirectUris),
                     AllowedScopesJson = Json(client.AllowedScopes),
                     AllowedTenantIdsJson = Json(client.AllowedTenantIds),
+                    AccessRulesJson = Json(client.AccessRules),
                     client.AccessTokenLifetimeSeconds,
                     client.RefreshTokenLifetimeSeconds,
                     client.Enabled,
@@ -113,7 +114,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
             "UPDATE [OidcClients] SET [DisplayName] = @DisplayName, "
             + "[RedirectUrisJson] = @RedirectUrisJson, "
             + "[PostLogoutRedirectUrisJson] = @PostLogoutRedirectUrisJson, "
-            + "[AllowedScopesJson] = @AllowedScopesJson, [AllowedTenantIdsJson] = @AllowedTenantIdsJson, "
+            + "[AllowedScopesJson] = @AllowedScopesJson, [AllowedTenantIdsJson] = @AllowedTenantIdsJson, [AccessRulesJson] = @AccessRulesJson, "
             + "[AccessTokenLifetimeSeconds] = @AccessTokenLifetimeSeconds, "
             + "[RefreshTokenLifetimeSeconds] = @RefreshTokenLifetimeSeconds, "
             + "[Enabled] = @Enabled, [UpdatedAt] = @UpdatedAt WHERE [ClientId] = @ClientId",
@@ -125,6 +126,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
                 PostLogoutRedirectUrisJson = Json(client.PostLogoutRedirectUris),
                 AllowedScopesJson = Json(client.AllowedScopes),
                 AllowedTenantIdsJson = Json(client.AllowedTenantIds),
+                AccessRulesJson = Json(client.AccessRules),
                 client.AccessTokenLifetimeSeconds,
                 client.RefreshTokenLifetimeSeconds,
                 client.Enabled,
@@ -182,6 +184,7 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
         PostLogoutRedirectUris = FromJson<string>(row.PostLogoutRedirectUrisJson),
         AllowedScopes = FromJson<string>(row.AllowedScopesJson),
         AllowedTenantIds = FromJson<int>(row.AllowedTenantIdsJson),
+        AccessRules = FromJson<AccessRule>(row.AccessRulesJson),
         AccessTokenLifetimeSeconds = row.AccessTokenLifetimeSeconds,
         RefreshTokenLifetimeSeconds = row.RefreshTokenLifetimeSeconds,
         Enabled = row.Enabled,
@@ -207,6 +210,9 @@ public sealed class OidcClientStore(IDbConnectionFactory connectionFactory)
         public string AllowedScopesJson { get; set; } = "[]";
 
         public string AllowedTenantIdsJson { get; set; } = "[]";
+
+
+        public string? AccessRulesJson { get; set; }
 
         public int? AccessTokenLifetimeSeconds { get; set; }
 
@@ -244,7 +250,7 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
     private const string Columns =
         "[ProviderId], [EntityId], [DisplayName], [AcsUrl], [SloUrl], [SigningCertificate], "
         + "[RequireSignedRequests], [NameIdFormat], [NameIdSource], [AttributeMappingsJson], "
-        + "[SignAssertion], [SignResponse], [AllowedTenantIdsJson], [Enabled], [CreatedAt], [UpdatedAt]";
+        + "[SignAssertion], [SignResponse], [AllowedTenantIdsJson], [AccessRulesJson], [Enabled], [CreatedAt], [UpdatedAt]";
 
     public async Task<IReadOnlyList<SamlProvider>> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -294,7 +300,7 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
                 "INSERT INTO [SamlProviders] (" + Columns + ") VALUES (@ProviderId, @EntityId, @DisplayName, "
                 + "@AcsUrl, @SloUrl, @SigningCertificate, @RequireSignedRequests, @NameIdFormat, "
                 + "@NameIdSource, @AttributeMappingsJson, @SignAssertion, @SignResponse, "
-                + "@AllowedTenantIdsJson, @Enabled, @CreatedAt, @UpdatedAt)",
+                + "@AllowedTenantIdsJson, @AccessRulesJson, @Enabled, @CreatedAt, @UpdatedAt)",
                 Parameters(provider, Guid.Parse(provider.ProviderId), nowUtc, nowUtc),
                 cancellationToken: cancellationToken)).ConfigureAwait(false);
             return true;
@@ -319,7 +325,7 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
                 + "[RequireSignedRequests] = @RequireSignedRequests, [NameIdFormat] = @NameIdFormat, "
                 + "[NameIdSource] = @NameIdSource, [AttributeMappingsJson] = @AttributeMappingsJson, "
                 + "[SignAssertion] = @SignAssertion, [SignResponse] = @SignResponse, "
-                + "[AllowedTenantIdsJson] = @AllowedTenantIdsJson, [Enabled] = @Enabled, "
+                + "[AllowedTenantIdsJson] = @AllowedTenantIdsJson, [AccessRulesJson] = @AccessRulesJson, [Enabled] = @Enabled, "
                 + "[UpdatedAt] = @UpdatedAt WHERE [ProviderId] = @ProviderId",
                 Parameters(provider, Guid.Parse(provider.ProviderId), nowUtc, nowUtc),
                 cancellationToken: cancellationToken)).ConfigureAwait(false);
@@ -361,6 +367,7 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
         provider.SignAssertion,
         provider.SignResponse,
         AllowedTenantIdsJson = OidcClientStore.Json(provider.AllowedTenantIds),
+        AccessRulesJson = OidcClientStore.Json(provider.AccessRules),
         provider.Enabled,
         CreatedAt = DbTime.ForDb(created),
         UpdatedAt = DbTime.ForDb(updated),
@@ -381,6 +388,7 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
         SignAssertion = row.SignAssertion,
         SignResponse = row.SignResponse,
         AllowedTenantIds = OidcClientStore.FromJson<int>(row.AllowedTenantIdsJson),
+        AccessRules = OidcClientStore.FromJson<AccessRule>(row.AccessRulesJson),
         Enabled = row.Enabled,
         CreatedAt = DbTime.AsUtc(row.CreatedAt),
         UpdatedAt = DbTime.AsUtc(row.UpdatedAt),
@@ -413,6 +421,9 @@ public sealed class SamlProviderStore(IDbConnectionFactory connectionFactory)
         public bool SignResponse { get; set; }
 
         public string AllowedTenantIdsJson { get; set; } = "[]";
+
+
+        public string? AccessRulesJson { get; set; }
 
         public bool Enabled { get; set; }
 

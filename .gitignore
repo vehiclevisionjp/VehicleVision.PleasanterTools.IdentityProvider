@@ -46,6 +46,7 @@ App_Data/Parameters/*.local.json
 **/App_Data/*.db
 **/App_Data/*.db-wal
 **/App_Data/*.db-shm
+**/App_Data/*.migration-lock.sqlite
 
 ## Python の実行時キャッシュ
 __pycache__/

@@ -1,0 +1,34 @@
+{
+    "//": "DB の設定。Pleasanter 本体の Rds.json と同じく、DBMS の種類は Dbms で指定する。Pleasanter の DB（読み取り専用）と、IdP 自身の DB（別のデータベース）の 2 つを持つ。⚠️ **接続文字列の実値（資格情報を含む）はここへコミットしない。** Rds.local.json（git 管理外）か環境変数で与える。値を変えるときは Rds.local.json か環境変数で上書きする",
+
+    "Pleasanter": {
+        "//Dbms": "Pleasanter の DB の種類。SqlServer / PostgreSql / MySql。環境変数 IDP_PLEASANTER_DB_PROVIDER",
+        "Dbms": "SqlServer",
+
+        "//ConnectionString": "Pleasanter の DB への接続文字列。**読み取り専用のユーザーを使う。** 資格情報を含むのでブラウザへ渡さない。環境変数 IDP_PLEASANTER_DB_CONNECTIONSTRING",
+        "ConnectionString": null,
+
+        "//AllowInsecure": "true で、暗号化を切る・証明書を確かめない接続文字列を許す。**検証環境だけ。** 環境変数 IDP_PLEASANTER_DB_ALLOW_INSECURE",
+        "AllowInsecure": false
+    },
+
+    "Idp": {
+        "//Dbms": "IdP 自身の DB の種類。SqlServer / PostgreSql / MySql / Sqlite。環境変数 IDP_DB_PROVIDER",
+        "Dbms": "SqlServer",
+
+        "//ConnectionString": "IdP 自身の DB への接続文字列。Sqlite だけは省略でき、App_Data/idp.db を作る。環境変数 IDP_DB_CONNECTIONSTRING",
+        "ConnectionString": null,
+
+        "//AllowInsecure": "true で、暗号化を切る・証明書を確かめない接続文字列を許す。**検証環境だけ。** 環境変数 IDP_DB_ALLOW_INSECURE",
+        "AllowInsecure": false,
+
+        "//AutoMigrate": "起動時にスキーマを当てる。false なら未適用があれば起動を止める（--migrate で手で当てる）。環境変数 IDP_DB_AUTO_MIGRATE",
+        "AutoMigrate": true,
+
+        "//MigrationLockTimeoutSeconds": "複数インスタンスの同時起動で、マイグレーションの排他を待つ秒数。環境変数 IDP_DB_MIGRATION_LOCK_TIMEOUT_SECONDS",
+        "MigrationLockTimeoutSeconds": 300,
+
+        "//SkipMigrationCheck": "AutoMigrate が false のとき、未適用の検査を省く。環境変数 IDP_DB_SKIP_MIGRATION_CHECK",
+        "SkipMigrationCheck": false
+    }
+}

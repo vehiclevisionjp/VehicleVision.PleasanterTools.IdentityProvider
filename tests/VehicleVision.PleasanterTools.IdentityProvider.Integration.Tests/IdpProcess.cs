@@ -331,3 +331,17 @@ public sealed class SubPathProcess : IdpProcess
         PathBase = "/idp";
     }
 }
+
+/// <summary>管理画面へ入れる人へ、グループ 9001 の Include と組織 9002 の Exclude を重ねた構成。</summary>
+public sealed class AdminAccessRuleProcess : IdpProcess
+{
+    public const int AllowedGroup = 9001;
+
+    public const int BlockedDept = 9002;
+
+    public AdminAccessRuleProcess()
+    {
+        ExtraEnvironment["IDP_ADMIN_INCLUDE"] = "group:" + AllowedGroup;
+        ExtraEnvironment["IDP_ADMIN_EXCLUDE"] = "dept:" + BlockedDept;
+    }
+}
