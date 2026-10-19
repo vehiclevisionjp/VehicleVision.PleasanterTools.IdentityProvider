@@ -421,3 +421,37 @@ a.button-link {
     font-size: 0.85rem;
   }
 }
+
+// ---- アクセスのルール ----
+
+.access-rules {
+  .rule-list {
+    margin: 0.5rem 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+
+  .rule-add,
+  .rule-manual {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    select,
+    input {
+      width: auto;
+      max-width: 14rem;
+    }
+  }
+}

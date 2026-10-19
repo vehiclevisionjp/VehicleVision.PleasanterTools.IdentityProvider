@@ -8,7 +8,6 @@
     "IDP_SECRET_KEY は compose.yaml の DEV_SECRET_KEY と同じ値にしてあるので、検証環境で作ったデータ（署名鍵）を手元の実行でも読める。",
     "先に `docker compose up -d --wait`（Pleasanter と SQL Server）を実行しておくこと。",
     "IdP 自身の DB は手元では SQLite（App_Data/idp.db）。SQL Server / PostgreSQL / MySQL で試すときは .vscode/launch.json の構成を使う。",
-    "IDP_ADMIN_ROLE は TenantManager にしてある（Pleasanter の既定の管理者 Administrator は ServiceManager を持たないため）。",
     "ポート 5067 は Frontend の vite.config.ts（開発サーバの /api の中継先）と合わせてある。"
   ],
   "profiles": {
@@ -26,7 +25,6 @@
         "IDP_PLEASANTER_DB_PROVIDER": "SqlServer",
         "IDP_PLEASANTER_DB_CONNECTIONSTRING": "Server=localhost,11433;Database=Implem.Pleasanter;UID=Implem.Pleasanter_User;PWD=IdentityProvider#Test1;TrustServerCertificate=True",
         "IDP_PLEASANTER_DB_ALLOW_INSECURE": "true",
-        "IDP_ADMIN_ROLE": "TenantManager",
         "IDP_SECRET_KEY": "4S8dqZ1yq7Xh0mF2vQnQZ6dQ0kGf1o8pM3nR5tU7wYs="
       }
     }

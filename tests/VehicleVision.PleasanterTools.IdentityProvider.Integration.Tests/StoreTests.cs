@@ -47,6 +47,7 @@ public class StoreTests
             PostLogoutRedirectUris = ["https://app.example.com/bye"],
             AllowedScopes = ["openid", "profile"],
             AllowedTenantIds = [1, 3],
+            AccessRules = [new AccessRule(AccessRules.Include, AccessRules.Group, 5, "営業 🚀"), new AccessRule(AccessRules.Exclude, AccessRules.User, 9)],
             AccessTokenLifetimeSeconds = 900,
         };
 
@@ -58,6 +59,7 @@ public class StoreTests
         Assert.Equal(client.DisplayName, read.DisplayName);
         Assert.Equal(client.RedirectUris, read.RedirectUris);
         Assert.Equal(client.AllowedTenantIds, read.AllowedTenantIds);
+        Assert.Equal(client.AccessRules, read.AccessRules);
         Assert.Equal(900, read.AccessTokenLifetimeSeconds);
         Assert.Null(read.RefreshTokenLifetimeSeconds);
         Assert.True(read.HasSecret);

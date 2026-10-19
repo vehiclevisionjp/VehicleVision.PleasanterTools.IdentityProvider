@@ -15,6 +15,8 @@ import type {
   SsoSession,
   Status,
   UserLookup,
+  AccessKind,
+  DirectoryEntry,
 } from './types';
 
 /**
@@ -142,6 +144,10 @@ export const listAuditLogs = (query: AuditLogQuery) =>
   call<AuditLog[]>(`/audit-logs${buildQuery({ ...query })}`);
 
 // ---- Pleasanter ユーザの照会 ------------------------------------------------
+
+/** アクセスのルールの対象を名前で探す（管理者自身のテナントだけ）。 */
+export const searchDirectory = (kind: AccessKind, q: string) =>
+  call<DirectoryEntry[]>(`/pleasanter/directory${buildQuery({ kind, q })}`);
 
 export const lookupPleasanterUser = (loginId: string) =>
   call<UserLookup>(`/pleasanter/users/lookup${buildQuery({ loginId })}`);
