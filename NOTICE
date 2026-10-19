@@ -29,7 +29,7 @@ Copyright (C) PMC Co.,Ltd.
   Microsoft.Data.SqlClient 7.1.1 / MIT / https://www.nuget.org/packages/Microsoft.Data.SqlClient
   Npgsql 10.0.3 / PostgreSQL License（BSD 系の寛容ライセンス） / https://www.nuget.org/packages/Npgsql
   MySqlConnector 2.6.2 / MIT / https://www.nuget.org/packages/MySqlConnector
-  Microsoft.Extensions.DependencyInjection 10.0.12 / MIT
+  Microsoft.Extensions.DependencyInjection 10.0.13 / MIT
   Otp.NET 1.4.1 / MIT / https://github.com/kspearrin/Otp.NET
     （TOTP の検証。Pleasanter 本体も同じライブラリで検証している）
   ITfoxtec.Identity.Saml2 4.21.0 / BSD-3-Clause / https://github.com/ITfoxtec/ITfoxtec.Identity.Saml2
