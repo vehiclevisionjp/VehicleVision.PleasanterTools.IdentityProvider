@@ -27,7 +27,8 @@ Claude Code の**リポジトリ共有**設定。権限の許可（`allow`）と
 
 ### 許可（allow）
 
-- 読み取り・検証: `git fetch`、`git worktree list / add`、`gh pr / issue / run / workflow / repo / label` の参照系、`npx markdownlint-cli2`、`bash -n`
+- 読み取り・検証: `git fetch`、`git worktree list / add`、`gh pr / issue / run / workflow / repo / label` の参照系、
+  `npx markdownlint-cli2`、`bash -n`
 - 作業の記録: `git add`、`git commit`（ローカルで取り消せる）
 - ビルド・検査: `dotnet build / restore / test / pack / format / list / new / sln / add`、`npm run build / check / lint / typecheck`
   （`src/*` の Frontend は `npm --prefix src/* run build / check / test`）
@@ -45,6 +46,7 @@ Claude Code の**リポジトリ共有**設定。権限の許可（`allow`）と
 
 - ルールは `Bash(...)` と `PowerShell(...)` を対にして並べる。`git -C <パス> push` のような形でも deny が当たるよう、`git * push ...` の形も併記している
 - ルールは、Claude Code が書く**典型の形**にしか当たらない。**安全の境界ではない。** 本当の防御は、GitHub 側のルールセットと、バイパス設定
+
 ## Copilot CLI
 
 `Bash(copilot:*)` / `Bash(copilot *)` を許可してある。Claude Code から Copilot CLI へ
