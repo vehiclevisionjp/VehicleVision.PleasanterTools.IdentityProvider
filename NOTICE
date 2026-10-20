@@ -57,9 +57,9 @@ Copyright (C) PMC Co.,Ltd.
   svelte 5.57.2 / MIT / https://www.npmjs.com/package/svelte
   vite 8.3.4 / MIT / https://www.npmjs.com/package/vite
   @sveltejs/vite-plugin-svelte 7.3.1 / MIT
-  svelte-check 4.7.6 / MIT
+  svelte-check 4.7.7 / MIT
   vitest 5.0.5 / MIT / https://www.npmjs.com/package/vitest
-  sass 1.105.1 / MIT
+  sass 1.105.2 / MIT
   typescript 6.0.3 / Apache-2.0
 
 同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
