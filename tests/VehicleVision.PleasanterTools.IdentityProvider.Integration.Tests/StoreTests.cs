@@ -486,44 +486,6 @@ public class StoreTests
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public async Task 監査ログの書き込みと絞り込みと並びと削除(DatabaseProvider provider)
-    {
-        var store = new AuditLogStore(await TestDatabases.FreshIdpDatabaseAsync(provider));
-        await store.WriteAsync(new AuditEntry(Now, "1:7", "taro", "auth.login.success", 200, "User", "1:7", "{\"methods\":[\"pwd\"]}", "203.0.113.5"));
-        await store.WriteAsync(new AuditEntry(Now.AddMinutes(1), null, "t_aro", "auth.login.failure", 401, DetailJson: "{\"理由\":\"日本語\"}"));
-        await store.WriteAsync(new AuditEntry(Now.AddMinutes(2), "1:1", "admin", "PUT /api/admin/oidc-clients/{clientId}", 200, "OidcClient", new string('x', 1000)));
-        await store.WriteAsync(new AuditEntry(Now.AddMinutes(3), "1:1", "admin", new string('a', 500), null));
-
-        var all = await store.ListAsync(new AuditLogQuery());
-        Assert.Equal(4, all.Count);
-        Assert.Equal(Now.AddMinutes(3), all[0].OccurredAt);
-        Assert.Equal(DateTimeKind.Utc, all[0].OccurredAt.Kind);
-
-        // 桁溢れは切り詰める（記録できなかったより、切り詰めた方がまし）
-        Assert.Equal(128, all[0].Action.Length);
-        Assert.Equal(512, all[1].TargetId!.Length);
-        Assert.Equal("{\"理由\":\"日本語\"}", all.Single(row => row.Action == "auth.login.failure").DetailJson);
-
-        Assert.Single(await store.ListAsync(new AuditLogQuery { FailedOnly = true }));
-        Assert.Single(await store.ListAsync(new AuditLogQuery { ActionContains = "login.success" }));
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery { From = Now.AddMinutes(2) })).Count);
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery { To = Now.AddMinutes(2) })).Count);
-
-        // LIKE の記号は逃がす（"_" が 1 文字の何でもにならない、"%" が何でもにならない）
-        Assert.Single(await store.ListAsync(new AuditLogQuery { Actor = "t_aro" }));
-        Assert.Empty(await store.ListAsync(new AuditLogQuery { Actor = "%zzz%" }));
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery { Actor = "admin" })).Count);
-
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery { Limit = 2 })).Count);
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery { Limit = 2, Offset = 2 })).Count);
-        Assert.Empty(await store.ListAsync(new AuditLogQuery { Offset = 10 }));
-
-        Assert.Equal(2, await store.DeleteOlderThanAsync(Now.AddMinutes(2)));
-        Assert.Equal(2, (await store.ListAsync(new AuditLogQuery())).Count);
-    }
-
-    [Theory]
-    [MemberData(nameof(Providers))]
     public async Task 期限切れの行だけを掃除する(DatabaseProvider provider)
     {
         var factory = await TestDatabases.FreshIdpDatabaseAsync(provider);

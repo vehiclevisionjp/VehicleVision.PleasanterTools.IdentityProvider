@@ -490,9 +490,9 @@ public static class AdminEndpoints
         {
             var rows = await store.ListAsync(new AuditLogQuery
             {
-                From = from?.UtcDateTime,
-                To = to?.UtcDateTime,
-                Actor = actor,
+                From = from,
+                To = to,
+                ActorLoginContains = actor,
                 FailedOnly = failedOnly ?? false,
                 ActionContains = action,
                 Limit = Math.Clamp(limit ?? 100, 1, 200),
@@ -501,8 +501,8 @@ public static class AdminEndpoints
 
             return Results.Json(rows.Select(row => new
             {
-                row.OccurredAt,
-                row.ActorUserKey,
+                OccurredAt = row.OccurredAt.UtcDateTime,
+                ActorUserKey = row.ActorKey,
                 row.ActorLoginId,
                 row.Action,
                 row.StatusCode,
