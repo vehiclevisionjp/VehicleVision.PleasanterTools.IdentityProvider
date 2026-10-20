@@ -75,7 +75,7 @@ internal static class TestDatabases
             await DropAllAsync(factory, ["VersionInfo"]).ConfigureAwait(false);
         }
 
-        await IdentityProviderDatabase.Migrator.MigrateUpWithLockAsync(
+        await IdentityProviderDatabase.Instance.Migrator.MigrateUpWithLockAsync(
             provider, connectionString, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
         return (factory, connectionString);
     }
