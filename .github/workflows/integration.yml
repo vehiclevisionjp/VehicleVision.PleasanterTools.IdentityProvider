@@ -20,7 +20,7 @@
 #   - job.services.<id>.id でコンテナ ID を取れる
 #     https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
 #   - イメージのタグはレジストリで実在を確認して固定した（compose.yaml と同じ版）
-name: 4 RDBMS 結合テスト
+name: Integration Tests
 
 on:
   # 根幹ブランチへの push と、根幹ブランチを対象とする PR
@@ -51,7 +51,7 @@ env:
 
 jobs:
   integration:
-    name: 4 RDBMS 結合テスト
+    name: integration
     runs-on: ubuntu-latest
 
     services:
