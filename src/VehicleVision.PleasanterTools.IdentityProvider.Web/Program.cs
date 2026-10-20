@@ -50,7 +50,7 @@ builder.Services.AddSingleton(new CookieSigner(secretKey));
 // IdP 自身の DB（読み書き）。Pleasanter の DB は別（読み取り専用）
 var provider = Enum.Parse<DatabaseProvider>(
     builder.Configuration["IDP_DB_PROVIDER"] ?? nameof(DatabaseProvider.SqlServer), ignoreCase: true);
-var connectionString = DatabaseConnectionString.Resolve(
+var connectionString = IdentityProviderDatabase.Instance.ResolveConnectionString(
     provider,
     builder.Configuration["IDP_DB_CONNECTIONSTRING"],
     builder.Environment.ContentRootPath);
@@ -64,10 +64,11 @@ if (string.IsNullOrWhiteSpace(pleasanterConnectionString))
 }
 
 // **DB への通信が平文で流れていないかを起動時に見る。**
-ConnectionSecurity.EnsureSecure(
+IdentityProviderDatabase.Instance.EnsureSecure(
     provider,
     connectionString,
     allowInsecure: string.Equals(builder.Configuration["IDP_DB_ALLOW_INSECURE"], "true", StringComparison.OrdinalIgnoreCase));
+// Pleasanter の DB は別の接続で、緩める設定名も別（アプリの DB とは設定名が違うので、Core を直接使う）
 ConnectionSecurity.EnsureSecure(
     pleasanterProvider,
     pleasanterConnectionString,
@@ -248,7 +249,7 @@ app.MapGet("/ready", async (CancellationToken cancellationToken) =>
         return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
     }
 
-    var failure = await DatabaseMigrator.WaitForDatabaseAsync(provider, connectionString, TimeSpan.Zero, cancellationToken);
+    var failure = await IdentityProviderDatabase.Instance.Migrator.WaitForDatabaseAsync(provider, connectionString, TimeSpan.Zero, cancellationToken);
     return failure is null
         ? Results.Ok(new { status = "ready" })
         : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);

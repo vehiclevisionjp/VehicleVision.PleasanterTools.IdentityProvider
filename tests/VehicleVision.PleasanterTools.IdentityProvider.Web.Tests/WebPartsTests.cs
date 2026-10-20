@@ -551,23 +551,23 @@ public class ImportMetadataTests
 public class ConnectionSecurityTests
 {
     [Theory]
-    [InlineData(Data.DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;Encrypt=True", true)]
-    [InlineData(Data.DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p", true)]
-    [InlineData(Data.DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;Encrypt=False", false)]
-    [InlineData(Data.DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;TrustServerCertificate=True", false)]
-    [InlineData(Data.DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=VerifyFull", true)]
-    [InlineData(Data.DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=VerifyCA", true)]
-    [InlineData(Data.DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Disable", false)]
-    [InlineData(Data.DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Prefer", false)]
-    [InlineData(Data.DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Require", false)]
-    [InlineData(Data.DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=VerifyFull", true)]
-    [InlineData(Data.DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=None", false)]
-    [InlineData(Data.DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=Preferred", false)]
-    [InlineData(Data.DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=Required", false)]
-    [InlineData(Data.DatabaseProvider.Sqlite, "Data Source=x.db", true)]
-    public void 暗号化と証明書の確認を見る(Data.DatabaseProvider provider, string connectionString, bool secure)
+    [InlineData(DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;Encrypt=True", true)]
+    [InlineData(DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p", true)]
+    [InlineData(DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;Encrypt=False", false)]
+    [InlineData(DatabaseProvider.SqlServer, "Server=db;Database=d;UID=u;PWD=p;TrustServerCertificate=True", false)]
+    [InlineData(DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=VerifyFull", true)]
+    [InlineData(DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=VerifyCA", true)]
+    [InlineData(DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Disable", false)]
+    [InlineData(DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Prefer", false)]
+    [InlineData(DatabaseProvider.PostgreSql, "Host=h;Database=d;Username=u;Password=p;SSL Mode=Require", false)]
+    [InlineData(DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=VerifyFull", true)]
+    [InlineData(DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=None", false)]
+    [InlineData(DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=Preferred", false)]
+    [InlineData(DatabaseProvider.MySql, "Server=h;Database=d;Uid=u;Pwd=p;SslMode=Required", false)]
+    [InlineData(DatabaseProvider.Sqlite, "Data Source=x.db", true)]
+    public void 暗号化と証明書の確認を見る(DatabaseProvider provider, string connectionString, bool secure)
     {
-        Assert.Equal(secure, Data.ConnectionSecurity.Inspect(provider, connectionString).Count == 0);
+        Assert.Equal(secure, ConnectionSecurity.Inspect(provider, connectionString).Count == 0);
     }
 
     [Fact]
@@ -576,15 +576,15 @@ public class ConnectionSecurityTests
         const string insecure = "Host=h;Database=d;Username=u;Password=p;SSL Mode=Disable";
 
         var exception = Assert.Throws<InvalidOperationException>(
-            () => Data.ConnectionSecurity.EnsureSecure(Data.DatabaseProvider.PostgreSql, insecure, allowInsecure: false));
-        Data.ConnectionSecurity.EnsureSecure(Data.DatabaseProvider.PostgreSql, insecure, allowInsecure: true);
+            () => Data.IdentityProviderDatabase.Instance.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: false));
+        Data.IdentityProviderDatabase.Instance.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: true);
 
         // 接続文字列（資格情報を含む）は例外へ出さない。緩める設定の名前は伝える
         Assert.DoesNotContain("Password=p", exception.Message, StringComparison.Ordinal);
         Assert.Contains("IDP_DB_ALLOW_INSECURE", exception.Message, StringComparison.Ordinal);
 
-        var pleasanter = Assert.Throws<InvalidOperationException>(() => Data.ConnectionSecurity.EnsureSecure(
-            Data.DatabaseProvider.PostgreSql, insecure, allowInsecure: false, allowSetting: "IDP_PLEASANTER_DB_ALLOW_INSECURE"));
+        var pleasanter = Assert.Throws<InvalidOperationException>(() => ConnectionSecurity.EnsureSecure(
+            DatabaseProvider.PostgreSql, insecure, allowInsecure: false, allowSetting: "IDP_PLEASANTER_DB_ALLOW_INSECURE"));
         Assert.Contains("IDP_PLEASANTER_DB_ALLOW_INSECURE", pleasanter.Message, StringComparison.Ordinal);
     }
 }

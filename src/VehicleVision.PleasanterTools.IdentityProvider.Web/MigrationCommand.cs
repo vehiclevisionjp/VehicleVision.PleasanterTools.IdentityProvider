@@ -51,7 +51,7 @@ public static class MigrationCommand
         if (wait > TimeSpan.Zero)
         {
             Console.WriteLine($"Waiting for the database (up to {wait.TotalSeconds:0}s)...");
-            var failure = await DatabaseMigrator
+            var failure = await IdentityProviderDatabase.Instance.Migrator
                 .WaitForDatabaseAsync(provider, connectionString, wait, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -64,7 +64,7 @@ public static class MigrationCommand
             }
         }
 
-        var pending = DatabaseMigrator.PendingMigrations(provider, connectionString);
+        var pending = IdentityProviderDatabase.Instance.Migrator.PendingMigrations(provider, connectionString);
         if (pending.Count == 0)
         {
             Console.WriteLine($"All migrations are applied ({provider}).");
@@ -83,7 +83,7 @@ public static class MigrationCommand
             return 1;
         }
 
-        var result = await DatabaseMigrator.MigrateUpWithLockAsync(
+        var result = await IdentityProviderDatabase.Instance.Migrator.MigrateUpWithLockAsync(
             provider,
             connectionString,
             TimeSpan.FromSeconds(DatabaseStartupMigration.DefaultLockTimeoutSeconds),

@@ -5,7 +5,7 @@ using VehicleVision.PleasanterTools.IdentityProvider.Data;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Web.Services;
 
-/// <summary>認証・トークン発行・管理操作を <c>AuditLogs</c> へ残す。</summary>
+/// <summary>認証・トークン発行・管理操作を Core.Data の共有表 <c>Core_AuditLogs</c> へ残す。</summary>
 /// <remarks>
 /// <para>
 /// **補足（<c>detail</c>）に、パスワード・シークレット・トークン・認可コード・TOTP の数字・
@@ -41,11 +41,13 @@ public sealed class AuditWriter(
         {
             await store.WriteAsync(
                 new AuditEntry(
-                    timeProvider.GetUtcNow().UtcDateTime,
+                    timeProvider.GetUtcNow(),
+                    action,
+                    // 結果の HTTP 状態が無い操作、または 400 未満は成功（失敗は 400 以上）
+                    statusCode is null or < 400,
+                    statusCode,
                     actorUserKey,
                     actorLoginId,
-                    action,
-                    statusCode,
                     targetType,
                     targetId,
                     detail is null ? null : JsonSerializer.Serialize(detail, DetailOptions),
