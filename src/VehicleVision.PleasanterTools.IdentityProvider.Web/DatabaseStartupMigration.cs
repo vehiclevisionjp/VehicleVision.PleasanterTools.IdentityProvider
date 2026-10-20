@@ -44,7 +44,7 @@ public static class DatabaseStartupMigration
                 }
 
                 var timeout = ReadLockTimeout(configuration[LockTimeoutSetting]);
-                var result = await IdentityProviderDatabase.Migrator.MigrateUpWithLockAsync(
+                var result = await IdentityProviderDatabase.Instance.Migrator.MigrateUpWithLockAsync(
                     provider,
                     connectionString,
                     timeout,
@@ -57,7 +57,7 @@ public static class DatabaseStartupMigration
             }
             else if (!skipCheck)
             {
-                var pendingMigrations = IdentityProviderDatabase.Migrator.PendingMigrations(provider, connectionString);
+                var pendingMigrations = IdentityProviderDatabase.Instance.Migrator.PendingMigrations(provider, connectionString);
                 if (pendingMigrations.Count > 0)
                 {
                     throw new InvalidOperationException(
@@ -78,7 +78,7 @@ public static class DatabaseStartupMigration
 
             var migrationStatus = skipCheck && !autoMigrate
                 ? null
-                : IdentityProviderDatabase.Migrator.GetStatus(provider, connectionString);
+                : IdentityProviderDatabase.Instance.Migrator.GetStatus(provider, connectionString);
             state.MarkReady(migrationStatus);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

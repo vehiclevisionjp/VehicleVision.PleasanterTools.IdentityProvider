@@ -576,8 +576,8 @@ public class ConnectionSecurityTests
         const string insecure = "Host=h;Database=d;Username=u;Password=p;SSL Mode=Disable";
 
         var exception = Assert.Throws<InvalidOperationException>(
-            () => Data.IdentityProviderDatabase.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: false));
-        Data.IdentityProviderDatabase.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: true);
+            () => Data.IdentityProviderDatabase.Instance.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: false));
+        Data.IdentityProviderDatabase.Instance.EnsureSecure(DatabaseProvider.PostgreSql, insecure, allowInsecure: true);
 
         // 接続文字列（資格情報を含む）は例外へ出さない。緩める設定の名前は伝える
         Assert.DoesNotContain("Password=p", exception.Message, StringComparison.Ordinal);
