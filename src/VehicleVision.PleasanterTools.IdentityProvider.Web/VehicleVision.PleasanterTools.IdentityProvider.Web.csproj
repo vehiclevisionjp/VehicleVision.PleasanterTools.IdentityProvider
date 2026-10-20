@@ -36,4 +36,9 @@
     <InternalsVisibleTo Include="VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- DB の基盤は Core.Data（NuGet）へ集約した。名前空間を暗黙に使えるようにする -->
+    <Using Include="VehicleVision.PleasanterTools.Core.Data" />
+  </ItemGroup>
+
 </Project>

@@ -26,8 +26,8 @@ public class StoreTests
     {
         var (_, connectionString) = await TestDatabases.FreshAsync(provider);
 
-        Assert.Empty(DatabaseMigrator.PendingMigrations(provider, connectionString));
-        var result = await DatabaseMigrator.MigrateUpWithLockAsync(provider, connectionString, TimeSpan.FromSeconds(30));
+        Assert.Empty(IdentityProviderDatabase.Migrator.PendingMigrations(provider, connectionString));
+        var result = await IdentityProviderDatabase.Migrator.MigrateUpWithLockAsync(provider, connectionString, TimeSpan.FromSeconds(30));
         Assert.Equal(0, result.AppliedCount);
     }
 
