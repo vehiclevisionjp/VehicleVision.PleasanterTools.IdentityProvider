@@ -82,7 +82,7 @@ internal static class TestDatabases
 
     private static readonly string[] IdpTables =
     [
-        "AuditLogs", "PendingRequests", "TotpUsedSteps", "LoginFailures", "RefreshTokens",
+        "Core_AuditLogs", "PendingRequests", "TotpUsedSteps", "LoginFailures", "RefreshTokens",
         "AuthorizationCodes", "SessionParticipants", "SsoSessions", "SigningKeys", "SamlProviders", "OidcClients",
     ];
 
