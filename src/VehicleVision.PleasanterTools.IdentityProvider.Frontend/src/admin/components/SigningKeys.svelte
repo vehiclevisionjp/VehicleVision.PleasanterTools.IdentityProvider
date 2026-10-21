@@ -21,8 +21,8 @@
     loading = true;
     error = null;
     const result = await listSigningKeys();
-    if (result.ok) keys = result.value;
-    else error = result.message;
+    if (result.ok) {keys = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
@@ -37,7 +37,7 @@
       confirmLabel: t('keys.rotate'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     notice = null;
@@ -47,7 +47,7 @@
     if (result.ok) {
       notice = t('keys.rotated', { keyId: result.value.keyId });
       await load();
-    } else error = result.message;
+    } else {error = result.message;}
   }
 
   async function remove(key: SigningKey): Promise<void> {
@@ -57,22 +57,22 @@
       confirmLabel: t('common.delete'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     notice = null;
     const result = await deleteSigningKey(key.keyId);
     if (result.ok) {
-      if (certificate?.keyId === key.keyId) certificate = null;
+      if (certificate?.keyId === key.keyId) {certificate = null;}
       keys = keys.filter((item) => item.keyId !== key.keyId);
-    } else error = result.message;
+    } else {error = result.message;}
   }
 
   async function showCertificate(key: SigningKey): Promise<void> {
     error = null;
     const result = await getSigningKeyCertificate(key.keyId);
-    if (result.ok) certificate = { keyId: key.keyId, pem: result.value };
-    else error = result.message;
+    if (result.ok) {certificate = { keyId: key.keyId, pem: result.value };}
+    else {error = result.message;}
   }
 </script>
 

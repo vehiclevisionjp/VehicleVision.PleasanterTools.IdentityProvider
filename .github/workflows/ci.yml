@@ -126,6 +126,9 @@ jobs:
       - name: 型と Svelte を検査する
         run: npm run check
 
+      - name: "{} の省略が無いか検査する"
+        run: npm run lint:ts
+
       - name: 単体テストを実行する
         # **型検査では捕まらない規則を見る**。
         # 画面の状態管理・入力の検証など、型検査では捕まらない規則

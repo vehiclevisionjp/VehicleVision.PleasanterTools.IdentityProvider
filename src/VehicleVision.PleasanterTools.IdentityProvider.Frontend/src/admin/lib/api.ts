@@ -33,7 +33,7 @@ let redirectingToLogin = false;
 
 /** 未ログイン（401）のとき、ログイン画面へ遷移する。**戻り先は管理画面の入口。** */
 function redirectToLogin(): void {
-  if (redirectingToLogin || typeof window === 'undefined') return;
+  if (redirectingToLogin || typeof window === 'undefined') {return;}
   redirectingToLogin = true;
   window.location.assign(loginUrl(adminPath, basePath));
 }

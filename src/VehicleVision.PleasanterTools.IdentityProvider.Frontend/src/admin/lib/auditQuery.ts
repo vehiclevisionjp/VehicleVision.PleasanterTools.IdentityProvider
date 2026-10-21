@@ -24,7 +24,7 @@ export function emptyAuditFilter(): AuditFilter {
  * API の日時は UTC なので、端末の時刻として読んだものを UTC へ直して送る。
  */
 export function localToIso(value: string): string | undefined {
-  if (value.trim() === '') return undefined;
+  if (value.trim() === '') {return undefined;}
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }

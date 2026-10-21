@@ -15,8 +15,8 @@
     loading = true;
     error = null;
     const result = await listSamlProviders();
-    if (result.ok) providers = result.value;
-    else error = result.message;
+    if (result.ok) {providers = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
@@ -29,12 +29,12 @@
       confirmLabel: t('common.delete'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await deleteSamlProvider(provider.providerId);
-    if (result.ok) providers = providers.filter((item) => item.providerId !== provider.providerId);
-    else error = result.message;
+    if (result.ok) {providers = providers.filter((item) => item.providerId !== provider.providerId);}
+    else {error = result.message;}
   }
 </script>
 

@@ -17,8 +17,8 @@
     loading = true;
     error = null;
     const result = await listOidcClients();
-    if (result.ok) clients = result.value;
-    else error = result.message;
+    if (result.ok) {clients = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
@@ -31,12 +31,12 @@
       confirmLabel: t('clients.reissue'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await reissueOidcClientSecret(client.clientId);
-    if (result.ok) issued = { clientId: client.clientId, secret: result.value.clientSecret };
-    else error = result.message;
+    if (result.ok) {issued = { clientId: client.clientId, secret: result.value.clientSecret };}
+    else {error = result.message;}
   }
 
   async function remove(client: OidcClient): Promise<void> {
@@ -46,12 +46,12 @@
       confirmLabel: t('common.delete'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await deleteOidcClient(client.clientId);
-    if (result.ok) clients = clients.filter((item) => item.clientId !== client.clientId);
-    else error = result.message;
+    if (result.ok) {clients = clients.filter((item) => item.clientId !== client.clientId);}
+    else {error = result.message;}
   }
 </script>
 

@@ -9,8 +9,8 @@ export type TotpVerdict = 'notFound' | 'required' | 'requiredNoDevice' | 'notReq
 
 /** 結果の分類。 */
 export function totpVerdict(lookup: UserLookup): TotpVerdict {
-  if (!lookup.found) return 'notFound';
-  if (lookup.totpRequired) return lookup.hasTotp ? 'required' : 'requiredNoDevice';
+  if (!lookup.found) {return 'notFound';}
+  if (lookup.totpRequired) {return lookup.hasTotp ? 'required' : 'requiredNoDevice';}
   return lookup.hasTotp ? 'notRequiredHasTotp' : 'notRequired';
 }
 
