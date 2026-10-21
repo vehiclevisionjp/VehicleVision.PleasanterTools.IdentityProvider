@@ -35,4 +35,6 @@ Claude Code はローカルで `CLAUDE.md` を読み、そこから同じ参照�
       copyleft が伸びない**ので、商用ライセンスでの提供と両立する。
       ⚠️ **フォント以外へこの例外を広げないこと**
 8. **Pleasanter の DB 資格情報・IdP の署名鍵をブラウザへ渡さないこと。** 資格情報と鍵はサーバ側だけで保持する
+9. **`{}` を省略しない。** `if` / `else` / `for` / `foreach` / `while` / `using` / `lock` などの本文も、
+   1 行で済む場合も同じ。C# は `.editorconfig` とビルドで、TypeScript・Svelte は ESLint の `curly` で強制する。
 
