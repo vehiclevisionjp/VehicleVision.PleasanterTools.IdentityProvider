@@ -34,7 +34,7 @@ export function initLanguage(): void {
 export function setLanguage(next: Language, persist = true): void {
   current = next;
   applyDocumentLanguage(next);
-  if (persist) saveLanguage(next);
+  if (persist) {saveLanguage(next);}
 }
 
 /** 文言を引く。**`$state` を読むので、呼んだ所が言語の切り替えで描き直る。** */

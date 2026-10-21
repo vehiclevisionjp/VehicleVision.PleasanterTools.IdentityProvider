@@ -44,7 +44,7 @@
   }
 
   function add(entryKind: AccessKind, id: number, label: string | null): void {
-    if (isAdded(entryKind, id)) return;
+    if (isAdded(entryKind, id)) {return;}
     rules = [...rules, { effect, kind: entryKind, targetId: id, label }];
   }
 
@@ -69,7 +69,7 @@
 
   function addManual(): void {
     const id = Number(manualId.trim());
-    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isInteger(id) || id <= 0) {return;}
     add(kind, id, null);
     manualId = '';
   }

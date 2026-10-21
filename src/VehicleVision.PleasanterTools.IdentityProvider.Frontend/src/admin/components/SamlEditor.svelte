@@ -122,7 +122,7 @@
       // **保存はしない。** フォームへ埋めるだけで、保存は利用者が確かめてから
       form = applyImportedMetadata(form, result.value);
       imported = true;
-    } else importError = result.message;
+    } else {importError = result.message;}
     importing = false;
   }
 
@@ -141,33 +141,33 @@
     saving = true;
     if (providerId === null) {
       const result = await createSamlProvider(validated.value);
-      if (result.ok) location.hash = samlProviderHash(result.value.providerId);
-      else error = result.message;
+      if (result.ok) {location.hash = samlProviderHash(result.value.providerId);}
+      else {error = result.message;}
     } else {
       const result = await updateSamlProvider(providerId, validated.value);
       if (result.ok) {
         loaded = result.value;
         form = samlFormFromProvider(result.value);
         saved = true;
-      } else error = result.message;
+      } else {error = result.message;}
     }
     saving = false;
   }
 
   async function remove(): Promise<void> {
-    if (!loaded) return;
+    if (!loaded) {return;}
     const ok = await confirmAction({
       title: t('saml.delete.title'),
       message: t('saml.delete.message', { name: loaded.displayName, entityId: loaded.entityId }),
       confirmLabel: t('common.delete'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await deleteSamlProvider(loaded.providerId);
-    if (result.ok) location.hash = '#/saml';
-    else error = result.message;
+    if (result.ok) {location.hash = '#/saml';}
+    else {error = result.message;}
   }
 </script>
 

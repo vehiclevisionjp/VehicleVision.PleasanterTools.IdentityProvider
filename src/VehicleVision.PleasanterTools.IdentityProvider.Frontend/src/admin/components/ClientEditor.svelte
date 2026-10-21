@@ -92,55 +92,55 @@
         } else {
           location.hash = clientHash(created.clientId);
         }
-      } else error = result.message;
+      } else {error = result.message;}
     } else {
       const result = await updateOidcClient(clientId, validated.value);
       if (result.ok) {
         loaded = result.value;
         form = oidcFormFromClient(result.value);
         saved = true;
-      } else error = result.message;
+      } else {error = result.message;}
     }
     saving = false;
   }
 
   async function reissue(): Promise<void> {
-    if (!loaded) return;
+    if (!loaded) {return;}
     const ok = await confirmAction({
       title: t('clients.reissue.title'),
       message: t('clients.reissue.message', { name: loaded.displayName }),
       confirmLabel: t('clients.reissue'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await reissueOidcClientSecret(loaded.clientId);
     if (result.ok) {
       issued = { clientId: loaded.clientId, secret: result.value.clientSecret, next: '' };
-    } else error = result.message;
+    } else {error = result.message;}
   }
 
   async function remove(): Promise<void> {
-    if (!loaded) return;
+    if (!loaded) {return;}
     const ok = await confirmAction({
       title: t('clients.delete.title'),
       message: t('clients.delete.message', { name: loaded.displayName, clientId: loaded.clientId }),
       confirmLabel: t('common.delete'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await deleteOidcClient(loaded.clientId);
-    if (result.ok) location.hash = '#/clients';
-    else error = result.message;
+    if (result.ok) {location.hash = '#/clients';}
+    else {error = result.message;}
   }
 
   function closeSecret(): void {
     const next = issued?.next ?? '';
     issued = null;
-    if (next !== '') location.hash = next;
+    if (next !== '') {location.hash = next;}
   }
 </script>
 

@@ -83,7 +83,7 @@ function isLoopbackHost(hostname: string): boolean {
  * - フラグメント（`#`）は持てない（RFC 6749 3.1.2）
  */
 export function validateRedirectUri(uri: string, isPublicClient = false): FieldError | null {
-  if (uri.includes('*')) return { key: 'validation.redirectUri.wildcard', params: { value: uri } };
+  if (uri.includes('*')) {return { key: 'validation.redirectUri.wildcard', params: { value: uri } };}
 
   let url: URL;
   try {
@@ -100,7 +100,7 @@ export function validateRedirectUri(uri: string, isPublicClient = false): FieldE
   if (url.protocol === 'http:' && !isLoopbackHost(url.hostname)) {
     return { key: 'validation.redirectUri.insecure', params: { value: uri } };
   }
-  if (uri.includes('#')) return { key: 'validation.redirectUri.fragment', params: { value: uri } };
+  if (uri.includes('#')) {return { key: 'validation.redirectUri.fragment', params: { value: uri } };}
   return null;
 }
 
@@ -108,7 +108,7 @@ export function validateRedirectUri(uri: string, isPublicClient = false): FieldE
 export function validateRedirectUris(uris: readonly string[], isPublicClient = false): FieldError | null {
   for (const uri of uris) {
     const error = validateRedirectUri(uri, isPublicClient);
-    if (error) return error;
+    if (error) {return error;}
   }
   return null;
 }
@@ -142,7 +142,7 @@ export const MAX_LIFETIME_SECONDS = 31_536_000;
 /** 有効期間（秒）の入力。**空は「既定」を意味する `null`。** 正の整数だけ。 */
 export function parseOptionalSeconds(text: string): Parsed<number | null> {
   const trimmed = text.trim();
-  if (trimmed === '') return { ok: true, value: null };
+  if (trimmed === '') {return { ok: true, value: null };}
   if (!/^[0-9]+$/.test(trimmed)) {
     return { ok: false, error: { key: 'validation.seconds' } };
   }
@@ -255,34 +255,34 @@ export function validateOidcForm(
   }
 
   const displayName = form.displayName.trim();
-  if (displayName === '') errors.displayName = { key: 'validation.required' };
+  if (displayName === '') {errors.displayName = { key: 'validation.required' };}
 
   const redirectUris = parseLines(form.redirectUris);
   if (redirectUris.length === 0) {
     errors.redirectUris = { key: 'validation.redirectUri.required' };
   } else {
     const error = validateRedirectUris(redirectUris, form.clientType === 'public');
-    if (error) errors.redirectUris = error;
+    if (error) {errors.redirectUris = error;}
   }
 
   const postLogoutRedirectUris = parseLines(form.postLogoutRedirectUris);
   const postLogoutError = validateRedirectUris(postLogoutRedirectUris, form.clientType === 'public');
-  if (postLogoutError) errors.postLogoutRedirectUris = postLogoutError;
+  if (postLogoutError) {errors.postLogoutRedirectUris = postLogoutError;}
 
   const scopes = validateScopes(form.scopes);
-  if (!scopes.ok) errors.scopes = scopes.error;
+  if (!scopes.ok) {errors.scopes = scopes.error;}
 
   const tenantIds = parseTenantIds(form.tenantIds);
-  if (!tenantIds.ok) errors.tenantIds = tenantIds.error;
+  if (!tenantIds.ok) {errors.tenantIds = tenantIds.error;}
 
   const rulesError = validateAccessRules(form.accessRules);
-  if (rulesError) errors.accessRules = rulesError;
+  if (rulesError) {errors.accessRules = rulesError;}
 
   const access = parseOptionalSeconds(form.accessTokenLifetimeSeconds);
-  if (!access.ok) errors.accessTokenLifetimeSeconds = access.error;
+  if (!access.ok) {errors.accessTokenLifetimeSeconds = access.error;}
 
   const refresh = parseOptionalSeconds(form.refreshTokenLifetimeSeconds);
-  if (!refresh.ok) errors.refreshTokenLifetimeSeconds = refresh.error;
+  if (!refresh.ok) {errors.refreshTokenLifetimeSeconds = refresh.error;}
 
   if (Object.keys(errors).length > 0 || !scopes.ok || !tenantIds.ok || !access.ok || !refresh.ok) {
     return { ok: false, errors };
@@ -412,9 +412,9 @@ export function validateAttributeMappings(mappings: readonly AttributeMapping[])
   const names = new Set<string>();
   for (const mapping of mappings) {
     const name = mapping.attributeName.trim();
-    if (name === '') return { key: 'validation.attribute.empty' };
-    if (!known.has(mapping.source)) return { key: 'validation.attribute.source', params: { value: mapping.source } };
-    if (names.has(name)) return { key: 'validation.attribute.duplicate', params: { value: name } };
+    if (name === '') {return { key: 'validation.attribute.empty' };}
+    if (!known.has(mapping.source)) {return { key: 'validation.attribute.source', params: { value: mapping.source } };}
+    if (names.has(name)) {return { key: 'validation.attribute.duplicate', params: { value: name } };}
     names.add(name);
   }
   return null;
@@ -425,17 +425,17 @@ export function validateSamlForm(form: SamlFormState): FormResult<SamlProviderIn
   const errors: Partial<Record<SamlFormField, FieldError>> = {};
 
   const entityId = form.entityId.trim();
-  if (entityId === '') errors.entityId = { key: 'validation.required' };
+  if (entityId === '') {errors.entityId = { key: 'validation.required' };}
 
   const displayName = form.displayName.trim();
-  if (displayName === '') errors.displayName = { key: 'validation.required' };
+  if (displayName === '') {errors.displayName = { key: 'validation.required' };}
 
   const acsUrl = form.acsUrl.trim();
-  if (acsUrl === '') errors.acsUrl = { key: 'validation.required' };
-  else if (!isHttpUrl(acsUrl)) errors.acsUrl = { key: 'validation.url' };
+  if (acsUrl === '') {errors.acsUrl = { key: 'validation.required' };}
+  else if (!isHttpUrl(acsUrl)) {errors.acsUrl = { key: 'validation.url' };}
 
   const sloUrl = form.sloUrl.trim();
-  if (sloUrl !== '' && !isHttpUrl(sloUrl)) errors.sloUrl = { key: 'validation.url' };
+  if (sloUrl !== '' && !isHttpUrl(sloUrl)) {errors.sloUrl = { key: 'validation.url' };}
 
   const certificate = form.signingCertificate.trim();
   if (certificate !== '' && !looksLikeCertificate(certificate)) {
@@ -445,13 +445,13 @@ export function validateSamlForm(form: SamlFormState): FormResult<SamlProviderIn
   }
 
   const mappingError = validateAttributeMappings(form.attributeMappings);
-  if (mappingError) errors.attributeMappings = mappingError;
+  if (mappingError) {errors.attributeMappings = mappingError;}
 
   const tenantIds = parseTenantIds(form.tenantIds);
-  if (!tenantIds.ok) errors.tenantIds = tenantIds.error;
+  if (!tenantIds.ok) {errors.tenantIds = tenantIds.error;}
 
   const rulesError = validateAccessRules(form.accessRules);
-  if (rulesError) errors.accessRules = rulesError;
+  if (rulesError) {errors.accessRules = rulesError;}
 
   if (Object.keys(errors).length > 0 || !tenantIds.ok) {
     return { ok: false, errors };

@@ -44,7 +44,7 @@ export function parseRoute(hash: string): Route {
   const [head, second] = segments;
 
   const id = (): string | null => {
-    if (second === undefined || segments.length > 2) return null;
+    if (second === undefined || segments.length > 2) {return null;}
     try {
       return decodeURIComponent(second);
     } catch {
@@ -54,12 +54,12 @@ export function parseRoute(hash: string): Route {
 
   switch (head) {
     case 'clients':
-      if (segments.length === 1) return { page: 'clients' };
-      if (second === 'new' && segments.length === 2) return { page: 'client', clientId: null };
+      if (segments.length === 1) {return { page: 'clients' };}
+      if (second === 'new' && segments.length === 2) {return { page: 'client', clientId: null };}
       return id() === null ? { page: 'clients' } : { page: 'client', clientId: id() };
     case 'saml':
-      if (segments.length === 1) return { page: 'saml' };
-      if (second === 'new' && segments.length === 2) return { page: 'samlProvider', providerId: null };
+      if (segments.length === 1) {return { page: 'saml' };}
+      if (second === 'new' && segments.length === 2) {return { page: 'samlProvider', providerId: null };}
       return id() === null ? { page: 'saml' } : { page: 'samlProvider', providerId: id() };
     case 'keys':
       return { page: 'keys' };

@@ -37,7 +37,7 @@ export function buildQuery(
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null || value === '' || value === false) continue;
+    if (value === undefined || value === null || value === '' || value === false) {continue;}
     search.set(key, String(value));
   }
   const text = search.toString();
@@ -68,7 +68,7 @@ export function parseError(status: number, body: unknown, fallbackMessage: strin
 
 /** 応答本体の文字列を JSON として読む。空は `undefined`、JSON でなければ文字列のまま。 */
 export function parseBody(raw: string): unknown {
-  if (raw === '') return undefined;
+  if (raw === '') {return undefined;}
   try {
     return JSON.parse(raw);
   } catch {

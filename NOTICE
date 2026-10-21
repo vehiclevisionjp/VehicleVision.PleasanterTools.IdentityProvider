@@ -61,6 +61,9 @@ Copyright (C) PMC Co.,Ltd.
   vitest 5.0.5 / MIT / https://www.npmjs.com/package/vitest
   sass 1.105.2 / MIT
   typescript 6.0.3 / Apache-2.0
+  eslint 10.13.0 / MIT
+  typescript-eslint 8.72.0 / MIT
+  eslint-plugin-svelte 3.23.1 / MIT
 
 同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
 

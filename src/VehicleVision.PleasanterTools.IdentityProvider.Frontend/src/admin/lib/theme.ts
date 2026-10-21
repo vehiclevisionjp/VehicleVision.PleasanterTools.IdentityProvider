@@ -16,7 +16,7 @@ export function parseThemePreference(value: string | null | undefined): ThemePre
 
 /** OS に従う指定を、実際に当てる配色へ解決する。 */
 export function resolveTheme(preference: ThemePreference, systemDark: boolean): ResolvedTheme {
-  if (preference === 'system') return systemDark ? 'dark' : 'light';
+  if (preference === 'system') {return systemDark ? 'dark' : 'light';}
   return preference;
 }
 

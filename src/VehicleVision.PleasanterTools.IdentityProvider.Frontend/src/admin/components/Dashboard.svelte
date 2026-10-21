@@ -15,8 +15,8 @@
     loading = true;
     error = null;
     const result = await getStatus();
-    if (result.ok) status = result.value;
-    else error = result.message;
+    if (result.ok) {status = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
