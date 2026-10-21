@@ -1,0 +1,256 @@
+# 4 RDBMS（SQL Server / PostgreSQL / MySQL / SQLite）へ実際に当てる結合テスト。
+#
+# **1 ジョブにまとめて直列で回す。** DB ごとに分けたジョブで並列に回すと、
+# 同じテーブルを触るテストが互いの行を消し合う（実際に踏んだ）。xUnit 側でも
+# テストクラスの並列実行を止めてある
+# （tests/.../Integration.Tests/AssemblyInfo.cs の CollectionBehavior）。
+#
+# **ここで回さない範囲。** Pleasanter 本体の検証環境（implem/pleasanter ＋ CodeDefiner）と
+# IdP アプリのコンテナが要るものは外してある。
+#   - scripts/smoke.sh（起動しているアプリへ HTTP で当てるもの）
+#     → 手元の `docker compose --profile postgres up -d --wait` で確認する。
+#
+# **接続先は tests 側にハードコードされている**（localhost の 11433 / 15432 / 13306、
+# パスワードは検証用の固定値）。ここでのポート公開はその値に合わせてある。変えると通らない。
+#
+# 参照した一次情報（いずれも 2026-08-18 参照）
+#   - サービスコンテナ（runner 上のジョブからは localhost:<port> で届く）
+#     https://docs.github.com/actions/using-containerized-services/about-service-containers
+#     https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers
+#   - job.services.<id>.id でコンテナ ID を取れる
+#     https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+#   - イメージのタグはレジストリで実在を確認して固定した（compose.yaml と同じ版）
+name: Integration Tests
+
+on:
+  # 根幹ブランチへの push と、根幹ブランチを対象とする PR
+  # （_documents/ブランチ運用方針.md「CI の実行条件」）
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  # **検証環境用の固定値。** 本番の資格情報ではない。
+  # tests 側の接続文字列に直書きされている値と同じにする必要がある
+  TESTENV_SA_PASSWORD: IdentityProvider#Test1
+
+jobs:
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+
+    services:
+      # ---- SQL Server ------------------------------------------------------
+      # compose.yaml と同じイメージ。ポートは tests 側の接続文字列に合わせる
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: IdentityProvider#Test1
+          MSSQL_PID: Developer
+          TZ: Asia/Tokyo
+        ports:
+          - 11433:1433
+
+      # ---- PostgreSQL ------------------------------------------------------
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_PASSWORD: IdentityProvider#Test1
+          POSTGRES_DB: idp
+          # **UTC にしない。** サーバの時間帯が UTC だと、Npgsql の変換事故を
+          # 見つける検証（DbTimeTests）が素通りする
+          TZ: Asia/Tokyo
+        ports:
+          - 15432:5432
+
+      # ---- MySQL -----------------------------------------------------------
+      # **サービスコンテナは起動コマンドを差し替えられない。**
+      # compose.yaml が --character-set-server で指定している文字集合は、
+      # 起動後に ALTER DATABASE で合わせる（下のステップ）
+      mysql:
+        image: mysql:26
+        env:
+          MYSQL_ROOT_PASSWORD: IdentityProvider#Test1
+          MYSQL_DATABASE: idp
+          TZ: Asia/Tokyo
+        ports:
+          - 13306:3306
+
+    steps:
+      - name: ソースを取得する
+        uses: actions/checkout@v7
+        with:
+          submodules: false
+
+      - name: .NET SDK を用意する
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: DB の起動を待つ
+        # **サービスコンテナ側の healthcheck に頼らない。**
+        # options へ書くとパスワードの引用が入れ子になって壊れやすいため、
+        # ここで docker exec して素直に待つ
+        run: |
+          set -euo pipefail
+
+          wait_for() {
+              local label="$1" tries="$2"
+              shift 2
+              for i in $(seq 1 "$tries"); do
+                  if "$@" >/dev/null 2>&1; then
+                      echo "OK   $label（${i} 回目）"
+                      return 0
+                  fi
+                  sleep 5
+              done
+              echo "NG   $label が起動しない" >&2
+              return 1
+          }
+
+          python3 scripts/wait_sqlserver.py "${{ job.services.sqlserver.id }}"
+
+          wait_for "PostgreSQL" 60 \
+              docker exec ${{ job.services.postgres.id }} pg_isready -U postgres
+
+          wait_for "MySQL" 60 \
+              docker exec ${{ job.services.mysql.id }} \
+              mysqladmin ping -h 127.0.0.1 -uroot -p"$TESTENV_SA_PASSWORD"
+
+      - name: SQL Server の起動診断を残す
+        if: failure()
+        run: python3 scripts/wait_sqlserver.py "${{ job.services.sqlserver.id }}" --diagnose-only
+
+      - name: SQL Server の起動診断を保存する
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: SQLServer起動診断-結合テスト
+          path: TestResults/sqlserver-startup/
+          if-no-files-found: ignore
+
+      - name: DB を検証環境と同じ状態にする
+        run: |
+          set -euo pipefail
+
+          # **SQL Server には IdentityProvider データベースが要る。**
+          # スキーマの適用（マイグレーション）はデータベースを作らない
+          docker exec ${{ job.services.sqlserver.id }} \
+              /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$TESTENV_SA_PASSWORD" -C -b \
+              -Q "IF DB_ID('IdentityProvider') IS NULL CREATE DATABASE [IdentityProvider];"
+
+          # **utf8mb4 を明示する。** 絵文字を含む定義を保存する検証があるため
+          # （compose.yaml の --character-set-server / --collation-server と同じ）
+          docker exec ${{ job.services.mysql.id }} \
+              mysql -uroot -p"$TESTENV_SA_PASSWORD" \
+              -e "ALTER DATABASE idp CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;"
+
+      - name: 結合テストを実行する
+        env:
+          # **設定しないと何も検証せずに緑になる。** ここが本ワークフローの肝
+          IDP_INTEGRATION: "1"
+          # 実行環境の時間帯は既定 UTC。検証環境（compose.yaml）に合わせる
+          TZ: Asia/Tokyo
+        run: >-
+          dotnet test tests/VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests
+          -c Release
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory "$GITHUB_WORKSPACE/TestResults"
+
+      - name: 起動できるかを確かめる
+        # **経路の組み立ては、アプリを本当に起こさないと確かめられない。**
+        # 最小 API は GET / DELETE の本文を推論しないため、
+        # 1 本でも本文つきの DELETE があると**経路の組み立てで例外**になり、
+        # アプリ全体が起動しない。単体テストも結合テストも経路を組み立てないので、
+        # **ここを通さないとマージ後に初めて分かる。**
+        #
+        # ⚠️ **空の DB へ当てる。** いちばん普通の入り方は「設定だけ与えて初めて起動する」で、
+        # スキーマが当たった DB へ当てると初回起動を一度も試さないことになる。
+        # 結合テストが使う idp とは別に、**このステップ専用の空の DB を作る。**
+        #
+        # Pleasanter の DB は読み取りの参照先。ここでは起動だけを見るので、
+        # 空の DB を形だけ渡す（Pleasanter 本体は要らない）。
+        env:
+          IDP_DB_PROVIDER: PostgreSql
+          IDP_DB_CONNECTIONSTRING: >-
+            Host=localhost;Port=15432;Database=idp_firstboot;Username=postgres;Password=IdentityProvider#Test1
+          IDP_PLEASANTER_DB_PROVIDER: PostgreSql
+          IDP_PLEASANTER_DB_CONNECTIONSTRING: >-
+            Host=localhost;Port=15432;Database=idp_pleasanter_dummy;Username=postgres;Password=IdentityProvider#Test1
+          # **検証用の DB は平文で繋ぐので、起動時の暗号化の検査（ConnectionSecurity）を緩める。**
+          # 本番では設定しない。緩めないと、PostgreSQL の既定（SSL Mode=Prefer）で起動が止まる
+          IDP_DB_ALLOW_INSECURE: "true"
+          IDP_PLEASANTER_DB_ALLOW_INSECURE: "true"
+          IDP_ISSUER: http://127.0.0.1:5080
+          ASPNETCORE_URLS: http://127.0.0.1:5080
+          ASPNETCORE_ENVIRONMENT: Production
+        run: |
+          set -euo pipefail
+
+          # ⚠️ **毎回まっさらから作る。** 残っていると「初めて起動する」を試したことにならない
+          for db in idp_firstboot idp_pleasanter_dummy; do
+              docker exec ${{ job.services.postgres.id }}                   psql -U postgres -c "DROP DATABASE IF EXISTS $db;"
+              docker exec ${{ job.services.postgres.id }}                   psql -U postgres -c "CREATE DATABASE $db;"
+          done
+
+          # **共有鍵は使い捨て。** ここで作った鍵は誰にも渡らない
+          IDP_SECRET_KEY="$(openssl rand -base64 32)"
+          export IDP_SECRET_KEY
+
+          dotnet build src/VehicleVision.PleasanterTools.IdentityProvider.Web -c Release
+          # ⚠️ **--no-launch-profile を付ける。** Properties/launchSettings.json が
+          # ASPNETCORE_URLS と環境を上書きしてしまい、待ち受け先が変わる（実際に踏んだ）
+          dotnet run --project src/VehicleVision.PleasanterTools.IdentityProvider.Web               -c Release --no-build --no-launch-profile               > "$GITHUB_WORKSPACE/startup.log" 2>&1 &
+          app_pid=$!
+
+          # **落ちたらすぐ分かるように、待つ側で生存も見る**
+          for i in $(seq 1 30); do
+              if ! kill -0 "$app_pid" 2>/dev/null; then
+                  echo "NG   アプリが起動せずに終了した" >&2
+                  cat "$GITHUB_WORKSPACE/startup.log" >&2
+                  exit 1
+              fi
+              if curl -fsS http://127.0.0.1:5080/healthz >/dev/null 2>&1; then
+                  echo "OK   起動して /healthz が応答した（${i} 回目）"
+                  kill "$app_pid"
+                  exit 0
+              fi
+              sleep 2
+          done
+
+          echo "NG   /healthz が応答しない" >&2
+          cat "$GITHUB_WORKSPACE/startup.log" >&2
+          kill "$app_pid" || true
+          exit 1
+
+      - name: 起動時のログを残す
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: 起動ログ
+          path: startup.log
+          if-no-files-found: ignore
+
+      - name: テスト結果を残す
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: 結合テスト結果
+          path: TestResults/*.trx
+          if-no-files-found: ignore

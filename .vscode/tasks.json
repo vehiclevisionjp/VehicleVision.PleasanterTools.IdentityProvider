@@ -1,0 +1,226 @@
+{
+  // VS Code のタスク。**コマンドを覚えなくても回せる**ことを目的にしている。
+  //
+  // **資格情報の実値をここへ書かないこと。** 入っているのは検証環境用の固定値だけ
+  // （App_Data/Parameters/README.md）。
+  //
+  // ⚠️ **args へ ${workspaceFolder} を書かないこと**（Issue #411）。
+  // Windows では `D:\repos\...` に展開される。既定シェルが Git Bash だと
+  // VS Code が 1 本のコマンド行へ組み立て、**bash がバックスラッシュを食べて**
+  // `D:reposVehicleVision...` になり、MSB1009（プロジェクトが見つからない）で落ちる。
+  // **タスクの作業ディレクトリは既定でワークスペース直下なので、相対パスで書けば足りる。**
+  // options.cwd はシェルを通らないため ${workspaceFolder} のままでよい。
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // **デバッグ起動はこれを通す**（Issue #421）。
+      // ⚠️ **wwwroot は git で追跡していない。** .NET のビルドだけでは画面が新しくならず、
+      // `git pull` しても古い画面が出続ける（実際に 1 週間気付かなかった）。
+      "label": "ビルド（アプリと画面）",
+      "detail": "画面を組み立ててから .NET をビルドする",
+      "dependsOn": ["画面をビルドする", "ビルド"],
+      "dependsOrder": "sequence",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      // **依存は無いときだけ入れる**（毎回 npm ci を回すとデバッグの開始が遅くなる）
+      "label": "画面をビルドする",
+      "detail": "画面（Frontend）を .Web/wwwroot へ出す",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/frontend-build.sh"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ビルド",
+      "detail": "ソリューション全体をビルドする（画面は含まない）",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "VehicleVision.PleasanterTools.IdentityProvider.slnx"],
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      "label": "ビルド（Release）",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "-c",
+        "Release",
+        "VehicleVision.PleasanterTools.IdentityProvider.slnx"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+
+    {
+      "label": "テスト（単体）",
+      "detail": "結合テストを除く。**環境変数を渡さないので結合テストは中身を実行せず終わる**",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "VehicleVision.PleasanterTools.IdentityProvider.slnx",
+        "--filter",
+        "FullyQualifiedName!~Integration.Tests"
+      ],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "テスト（結合・3 RDBMS）",
+      "detail": "**先に「検証環境を起動（SQL Server）」を実行しておくこと。** DB が要る",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "tests/VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests"
+      ],
+      "options": { "env": { "IDP_INTEGRATION": "1" } },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "テスト（このファイル）",
+      "detail": "開いているテストファイルのクラスだけを実行する",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "VehicleVision.PleasanterTools.IdentityProvider.slnx",
+        "--filter",
+        "FullyQualifiedName~${fileBasenameNoExtension}"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+
+    {
+      "label": "フロントエンド: 依存を入れる",
+      "type": "shell",
+      "command": "npm",
+      "args": ["ci"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Frontend"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "フロントエンド: 型検査",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "check"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Frontend"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "フロントエンド: ビルド",
+      "detail": "成果物は .Web/wwwroot へ出る",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Frontend"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "フロントエンド: 開発サーバ",
+      "detail": "**/api は localhost:8081 へ中継される。** 検証環境を起動しておくこと",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/VehicleVision.PleasanterTools.IdentityProvider.Frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+
+    {
+      "label": "検証環境を起動（SQL Server）",
+      "detail": "Pleasanter と SQL Server と IdP。**初回は数分かかる**",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "--profile", "sqlserver", "up", "-d", "--wait"],
+      "problemMatcher": []
+    },
+    {
+      "label": "検証環境を起動（PostgreSQL）",
+      "type": "shell",
+      "command": "docker",
+      "detail": "IdP 自身の DB を PostgreSQL にする（Pleasanter の DB は SQL Server のまま）",
+      "args": ["compose", "--profile", "postgres", "up", "-d", "--wait"],
+      "options": {
+        "env": {
+          "DEV_DB_PROVIDER": "PostgreSql",
+          "DEV_DB_CONNECTIONSTRING": "Host=db-postgres;Database=idp;Username=postgres;Password=IdentityProvider#Test1"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "検証環境を起動（MySQL）",
+      "type": "shell",
+      "command": "docker",
+      "detail": "IdP 自身の DB を MySQL にする（Pleasanter の DB は SQL Server のまま）",
+      "args": ["compose", "--profile", "mysql", "up", "-d", "--wait"],
+      "options": {
+        "env": {
+          "DEV_DB_PROVIDER": "MySql",
+          "DEV_DB_CONNECTIONSTRING": "Server=db-mysql;Database=idp;Uid=root;Pwd=IdentityProvider#Test1"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "検証環境をアプリだけ作り直す",
+      "detail": "コードを変えた後に使う。DB は残る",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "--profile", "sqlserver", "up", "-d", "--build", "--wait", "app"],
+      "problemMatcher": []
+    },
+    {
+      "label": "検証環境を止める",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "--profile", "sqlserver", "--profile", "postgres", "--profile", "mysql", "down"],
+      "problemMatcher": []
+    },
+    {
+      "label": "検証環境のログ（アプリ）",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "logs", "-f", "app"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+
+    {
+      "label": "smoke（動いているアプリへ当てる）",
+      "detail": "配信・セキュリティヘッダ・OIDC の発見文書を見る",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/smoke.sh"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ライセンス検査",
+      "detail": "**Pleasanter 本体（AGPL）への参照が混ざっていないか**を見る",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/license-check.sh"],
+      "problemMatcher": []
+    },
+    {
+      "label": "秘密の鍵を作る",
+      "detail": "IDP_SECRET_KEY に入れる値を作る（32 バイトの乱数を Base64 にしたもの）。**失うと保存済みの秘密が全部使えなくなる**",
+      "type": "shell",
+      "command": "openssl",
+      "args": ["rand", "-base64", "32"],
+      "problemMatcher": []
+    }
+  ]
+}

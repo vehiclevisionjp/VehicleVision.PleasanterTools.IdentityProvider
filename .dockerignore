@@ -1,0 +1,33 @@
+## Pleasanter 本体（AGPL）。**イメージへ絶対に入れない**
+_reference/
+
+## ビルド成果物
+**/bin/
+**/obj/
+_dist/
+artifacts/
+
+## node
+**/node_modules/
+**/.vite/
+
+## git / IDE
+.git/
+.github/
+.vs/
+.idea/
+.claude/
+
+## 資格情報・ローカル設定
+**/*.local.json
+**/*.env
+.env.local
+
+## 検証環境・一時成果物・文書
+tools/
+temp/
+_documents/
+tests/
+TestResults/
+_testresults/
+logs/

@@ -1,0 +1,29 @@
+{
+    "//": "認証まわりの設定。Pleasanter 本体の Security.json と同じ書き方（SecondaryAuthentication）を含む。値を変えるときは Security.local.json（git 管理外）か環境変数で上書きする",
+
+    "//SecretKey": "署名鍵の秘密鍵を暗号化する鍵（Base64 の 32 バイト）と、cookie の署名鍵の元。**失うと保存済みの署名鍵が復号できなくなる。** 控えを取ること。`dotnet …Web.dll --generate-secret-key` で作れる。**無ければ、起動時に作って Security.local.json へ保存する**（IdP の DB に署名鍵がまだ無いときだけ。保存できなければ作らず起動を止める。複数インスタンス・使い捨てのファイルシステムでは明示的に与える）。⚠️ **実値はここへコミットしない。** Security.local.json（git 管理外）か環境変数 IDP_SECRET_KEY（または IDP_SECRET_KEY_FILE。Key Vault・Docker secrets など）で与える",
+    "SecretKey": null,
+
+    "//SecretKeyAutoGenerate": "false で、SecretKey が無いときの自動生成を止める（無ければ起動を止める）。既定は true。環境変数 IDP_SECRET_KEY_AUTOGENERATE",
+    "SecretKeyAutoGenerate": true,
+
+    "//LoginMaxFailures": "ログインに失敗できる回数。パスワードと TOTP の失敗を合わせて数え、この回数に達すると LoginLockoutMinutes の間は入れない。**存在しないログイン ID も同じ回数で締め出す**（実在の見分けを付けさせない）。Pleasanter の DB へは書かないので、Pleasanter の LockoutCount とは別。1〜100",
+    "LoginMaxFailures": 5,
+
+    "//LoginFailureWindowMinutes": "失敗を数える期間（分）。最後の失敗からこの時間が経つと、数え直す",
+    "LoginFailureWindowMinutes": 15,
+
+    "//LoginLockoutMinutes": "締め出す時間（分）",
+    "LoginLockoutMinutes": 15,
+
+    "//TotpMode": "TOTP を求める条件。Auto（既定）= Pleasanter で TOTP を登録済み（EnableSecretKey が有効で SecretKey がある）の人に求める。Pleasanter = 下の SecondaryAuthentication.Mode と、ユーザごとの有効・無効の指定に従う（Pleasanter 本体と同じ条件。必須なのに未登録の人は、IdP では登録できないので入れない）",
+    "TotpMode": "Auto",
+
+    "SecondaryAuthentication": {
+        "//Mode": "TotpMode が Pleasanter のときだけ使う。None / DefaultEnable / DefaultDisable。Pleasanter の Security.json の SecondaryAuthentication.Mode と同じ意味。**この IdP がメールによる二次認証（NotificationType: Mail）に対応していないので、TOTP の人だけが対象**",
+        "Mode": "None",
+
+        "//CountTolerances": "TOTP で許す前の時間枠の数（1 枠 = 30 秒）。端末の時計のずれを吸収する。広げるほど総当たりが通りやすくなる。0〜3。この IdP は加えて、後ろ 1 枠を許す",
+        "CountTolerances": 1
+    }
+}
