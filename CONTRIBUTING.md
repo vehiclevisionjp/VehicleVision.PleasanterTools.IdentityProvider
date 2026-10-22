@@ -16,7 +16,8 @@
 
 1. [`CLA.md`](CLA.md) を読む
 2. **CLA への署名** の Issue を立てる（テンプレートあり）
-3. 当社が確認し、[`.github/cla/signed.yml`](.github/cla/signed.yml) へ追記する
+3. 株式会社ピー・エム・シー ITソリューション事業部が確認し、
+   [`.github/cla/signed.yml`](.github/cla/signed.yml) へ追記する
 4. 以後の PR では `CLA` のチェックが緑になる
 
 **会社の業務として貢献する場合は、法人用の署名も要ります。**

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # デュアルライセンス（AGPL-3.0-or-later OR 商用）の前提を機械で守る。
 #
-# Pleasanter 本体（AGPL v3）の著作権は当社に無い。取り込むと**商用ライセンスでの
-# 提供ができなくなる**ため、src / tests への混入を検査する。
+# Pleasanter 本体（AGPL v3）の著作権は株式会社ピー・エム・シー ITソリューション事業部に無い。
+# 取り込むと**商用ライセンスでの提供ができなくなる**ため、src / tests への混入を検査する。
 # _reference/ は参照専用なので検査対象から外す。
 set -euo pipefail
 cd "$(dirname "$0")/.."
