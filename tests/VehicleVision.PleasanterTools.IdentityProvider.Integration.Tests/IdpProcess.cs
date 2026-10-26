@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using VehicleVision.PleasanterTools.IdentityProvider.Data;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests;
@@ -159,15 +160,9 @@ public class IdpProcess : IAsyncLifetime
 
             try
             {
-                using var response = await client.GetAsync("/ready");
-                if (response.StatusCode == HttpStatusCode.OK)
+                if (await IsReadyAsync(client, PathBase))
                 {
-                    // 署名鍵の生成は /ready のあと。JWKS が出るまで待つ
-                    using var jwks = await client.GetAsync(PathBase + "/oidc/jwks");
-                    if (jwks.StatusCode == HttpStatusCode.OK && (await jwks.Content.ReadAsStringAsync()).Contains("\"kid\"", StringComparison.Ordinal))
-                    {
-                        return;
-                    }
+                    return;
                 }
             }
             catch (HttpRequestException)
@@ -181,6 +176,34 @@ public class IdpProcess : IAsyncLifetime
         }
 
         throw new TimeoutException($"IdP が 90 秒以内に ready にならなかった:\n{Output}");
+    }
+
+    internal static async Task<bool> IsReadyAsync(HttpClient client, string pathBase)
+    {
+        using var response = await client.GetAsync("/ready");
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            return false;
+        }
+
+        using var jwks = await client.GetAsync(pathBase + "/oidc/jwks");
+        if (jwks.StatusCode != HttpStatusCode.OK
+            || !(await jwks.Content.ReadAsStringAsync()).Contains("\"kid\"", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // OIDC の後に SAML 鍵が生成される。JWKS だけでは両用途の初期化完了を保証できない。
+        using var metadata = await client.GetAsync(pathBase + "/saml/metadata");
+        if (metadata.StatusCode != HttpStatusCode.OK)
+        {
+            return false;
+        }
+
+        XNamespace ds = "http://www.w3.org/2000/09/xmldsig#";
+        return XDocument.Parse(await metadata.Content.ReadAsStringAsync())
+            .Descendants(ds + "X509Certificate")
+            .Any(certificate => !string.IsNullOrWhiteSpace(certificate.Value));
     }
 
     private void Append(string? line)
