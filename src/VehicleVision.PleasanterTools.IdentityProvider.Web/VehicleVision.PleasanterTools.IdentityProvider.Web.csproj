@@ -7,7 +7,7 @@
     <!-- OIDC の ID トークン・アクセストークン（JWT）の署名。MIT -->
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <!-- 推移的依存（ITfoxtec.Identity.Saml2 経由）の脆弱性の修正版へ固定する -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>

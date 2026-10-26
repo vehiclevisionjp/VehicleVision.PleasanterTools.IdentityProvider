@@ -46,9 +46,9 @@ Copyright (C) PMC Co.,Ltd.
     （SAML 2.0 の IdP 側。Microsoft.IdentityModel.* と Newtonsoft.Json を推移的に伴う。いずれも MIT）
   Microsoft.IdentityModel.JsonWebTokens 8.23.0 / MIT / https://www.nuget.org/packages/Microsoft.IdentityModel.JsonWebTokens
     （OIDC の ID トークン・アクセストークンの署名と検証）
-  System.Security.Cryptography.Pkcs 10.0.13 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Pkcs
+  System.Security.Cryptography.Pkcs 10.0.14 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Pkcs
     （Microsoft.Data.SqlClient が推移的に伴う。脆弱性の修正版へ固定している）
-  System.Security.Cryptography.Xml 10.0.13 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Xml
+  System.Security.Cryptography.Xml 10.0.14 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Xml
     （ITfoxtec.Identity.Saml2 が推移的に伴う。テストプロジェクトのみ脆弱性の修正版へ固定している）
 
 フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体のみ。**
