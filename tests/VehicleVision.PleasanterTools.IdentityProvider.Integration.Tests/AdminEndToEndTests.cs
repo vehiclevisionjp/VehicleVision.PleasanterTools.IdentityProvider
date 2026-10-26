@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Nodes;
 
 namespace VehicleVision.PleasanterTools.IdentityProvider.Integration.Tests;
@@ -405,6 +406,7 @@ public class AdminEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
         using var admin = await E2E.AdminAsync(idp);
 
         using var list = await admin.GetAsync("/api/admin/signing-keys");
+        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
         var text = await list.Content.ReadAsStringAsync();
         var keys = JsonNode.Parse(text)!.AsArray();
 
@@ -415,9 +417,12 @@ public class AdminEndToEndTests(IdpProcess idp) : IClassFixture<IdpProcess>
 
         var samlKey = keys.First(key => key!["purpose"]!.GetValue<string>() == "saml")!;
         using var certificate = await admin.GetAsync("/api/admin/signing-keys/" + samlKey["keyId"]!.GetValue<string>() + "/certificate");
+        Assert.Equal(HttpStatusCode.OK, certificate.StatusCode);
         var pem = await certificate.Content.ReadAsStringAsync();
         Assert.StartsWith("-----BEGIN CERTIFICATE-----", pem, StringComparison.Ordinal);
         Assert.DoesNotContain("PRIVATE KEY", pem, StringComparison.Ordinal);
+        using var parsed = X509Certificate2.CreateFromPem(pem);
+        Assert.False(parsed.HasPrivateKey);
     }
 
     [Fact]
