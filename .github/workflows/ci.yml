@@ -152,6 +152,14 @@ jobs:
         # 取り込むと商用ライセンスでの提供ができなくなる（LICENSING.md）
         run: bash ./scripts/license-check.sh
 
+      - name: 参照ソースの既定先と共有先の隔離を検査する
+        run: |
+          bash ./scripts/reference-isolation-check.sh
+          bash ./scripts/tests/test_reference_isolation.sh
+
+      - name: 参照ソースの取得処理をネットワークなしで検証する
+        run: bash ./scripts/test-sync-reference.sh
+
       - name: VS Code のタスク定義を検査する
         # ⚠️ **手元でしか壊れないものは CI を素通りする**（Issue #411 / #413）。
         # タスクが壊れると F5 が通らず、開発が止まる。
