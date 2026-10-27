@@ -15,8 +15,10 @@ Claude Code は `applyTo` を自動で解釈しないため、自分で開く必
 
 ## このリポジトリ固有の注意
 
-- **`_reference/Implem.Pleasanter` は Pleasanter 本体（AGPL v3）のサブモジュールです。**
+- **`_reference/Implem.Pleasanter` は必要時に取得する Pleasanter 本体（AGPL v3）の非追跡ソースです。**
   事実確認のための参照専用で、コードの取り込みは禁止です。
+  読む前に `bash scripts/sync-reference.sh` で同期し、`PLEASANTER_REFERENCE_DIR` の指定時は
+  その取得先を直接読みます。確認した完全な SHA・固定リンク・参照日を残し、実機未検証は明記します。
   詳細は [`_reference/README.md`](_reference/README.md) を参照してください。
 - **Pleasanter の DB へは読み取り専用で接続します。** 書き込まない設計で、
   Pleasanter の `Users`（`SecretKey` を含む）を認証元として読むだけです。
