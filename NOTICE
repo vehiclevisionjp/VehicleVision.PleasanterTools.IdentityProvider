@@ -54,7 +54,7 @@ Copyright (C) PMC Co., Ltd. IT Solution Div.
 フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体のみ。**
 残りはビルド時だけ使う）
 
-  svelte 5.57.2 / MIT / https://www.npmjs.com/package/svelte
+  svelte 5.57.3 / MIT / https://www.npmjs.com/package/svelte
   vite 8.3.5 / MIT / https://www.npmjs.com/package/vite
   @sveltejs/vite-plugin-svelte 7.3.1 / MIT
   svelte-check 4.7.7 / MIT
