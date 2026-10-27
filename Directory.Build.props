@@ -12,6 +12,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- .editorconfig の IDE 規則（{} の省略禁止など）を、ビルドで強制する -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <!-- バージョンの単一情報源。各 .csproj へ個別に書かないこと。
@@ -22,22 +24,27 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Company>PMC Co.,Ltd.</Company>
+    <Company>PMC Co., Ltd. IT Solution Div.</Company>
+    <Authors>PMC Co., Ltd. IT Solution Div.</Authors>
     <Product>VehicleVision.PleasanterTools.IdentityProvider</Product>
-    <Copyright>Copyright (C) PMC Co.,Ltd.</Copyright>
+    <Copyright>Copyright (C) PMC Co., Ltd. IT Solution Div.</Copyright>
     <!-- デュアルライセンス（AGPL-3.0-or-later OR 商用）。LICENSING.md を参照。
          NuGet の PackageLicenseExpression は LicenseRef-* を含む式を受け付けないため
          ライセンスファイルを参照する -->
     <PackageLicenseFile>LICENSING.md</PackageLicenseFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)LICENSING.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
   <!--
     Pleasanter 本体（GNU AGPL v3）はコピー・流用・リンク・プロジェクト参照しない。
     本アプリは Pleasanter の「DB を読み取り専用で参照する別アプリ」であり、本体の派生著作物にしない。
 
     **本製品はデュアルライセンス（AGPL-3.0-or-later OR 商用）で提供する。**
-    Pleasanter の著作権は当社に無いため、本体を取り込むと商用ライセンスでの提供が
-    できなくなる。「どうせ AGPL 側があるから取り込んでよい」ではない。
+    Pleasanter の著作権は株式会社ピー・エム・シー ITソリューション事業部に無いため、
+    本体を取り込むと商用ライセンスでの提供ができなくなる。「どうせ AGPL 側があるから取り込んでよい」ではない。
     同じ理由で、依存 OSS は寛容ライセンス（MIT / BSD 系 / Apache-2.0）に限定する。
     詳細は LICENSING.md / _reference/README.md。
   -->

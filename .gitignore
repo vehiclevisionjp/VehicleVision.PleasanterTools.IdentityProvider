@@ -5,6 +5,9 @@ artifacts/
 *.user
 _dist/
 
+## AI の事実確認用ソース（必要時に取得し、追跡しない）
+_reference/Implem.Pleasanter/
+
 ## rider / visual studio
 .vs/
 .idea/

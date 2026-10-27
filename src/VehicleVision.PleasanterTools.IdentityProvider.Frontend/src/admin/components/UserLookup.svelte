@@ -19,7 +19,7 @@
   async function lookup(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     const value = loginId.trim();
-    if (value === '') return;
+    if (value === '') {return;}
 
     loading = true;
     error = null;
@@ -28,7 +28,7 @@
     if (response.ok) {
       result = response.value;
       searched = value;
-    } else error = response.message;
+    } else {error = response.message;}
     loading = false;
   }
 

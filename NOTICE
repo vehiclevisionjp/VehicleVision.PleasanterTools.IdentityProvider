@@ -1,5 +1,5 @@
 VehicleVision.PleasanterTools.IdentityProvider
-Copyright (C) PMC Co.,Ltd.
+Copyright (C) PMC Co., Ltd. IT Solution Div.
 
 本ソフトウェアはデュアルライセンス（AGPL-3.0-or-later OR LicenseRef-PMC-Commercial）で
 提供されます。詳細は LICENSING.md を参照してください。
@@ -17,7 +17,7 @@ Copyright (C) PMC Co.,Ltd.
 
 名称 / バージョン / ライセンス / 入手元
 
-  VehicleVision.PleasanterTools.Core.Data 0.1.0-preview.7 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
+  VehicleVision.PleasanterTools.Core.Data 0.1.0-preview.11 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
     （DB の基盤。接続・暗号化検査・DbTime・マイグレーションと排他・SqlDialect の汎用部分。Dapper・FluentMigrator・DB ドライバは、これが推移的に伴う）
   Dapper 2.1.89 / Apache-2.0 / https://www.nuget.org/packages/Dapper
   FluentMigrator 8.0.1 / Apache-2.0 / https://www.nuget.org/packages/FluentMigrator
@@ -35,7 +35,7 @@ Copyright (C) PMC Co.,Ltd.
       単体での再配布の禁止・保証の否認・責任の制限・輸出規制の遵守など、この許諾と同程度に守る条件へ同意させる／
       アプリの頒布・利用に関する請求から Microsoft を補償する（改変していない SNI だけに基づく請求を除く）。
       **2026-10-20 の決定**: 条件を明記したうえで許容し、「依存は寛容ライセンスに限る」の例外として扱う。
-      頒布するときは、上の条件を利用許諾（商用条件・EULA）へ反映する。法務の確認は別途）
+      上の条件は、LICENSING.md（例外の節）と LICENSE-COMMERCIAL.md（頒布先に守っていただく条件）へ反映した。法務の確認は別途）
   Npgsql 10.0.3 / PostgreSQL License（BSD 系の寛容ライセンス） / https://www.nuget.org/packages/Npgsql
   MySqlConnector 2.6.2 / MIT / https://www.nuget.org/packages/MySqlConnector
   Microsoft.Extensions.DependencyInjection 10.0.13 / MIT
@@ -61,6 +61,9 @@ Copyright (C) PMC Co.,Ltd.
   vitest 5.0.5 / MIT / https://www.npmjs.com/package/vitest
   sass 1.105.2 / MIT
   typescript 6.0.3 / Apache-2.0
+  eslint 10.13.0 / MIT
+  typescript-eslint 8.72.0 / MIT
+  eslint-plugin-svelte 3.23.1 / MIT
 
 同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
 

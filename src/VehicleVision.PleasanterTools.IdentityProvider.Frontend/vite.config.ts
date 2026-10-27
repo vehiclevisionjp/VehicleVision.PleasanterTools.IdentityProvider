@@ -16,7 +16,7 @@ function forbidInlineFonts(): Plugin {
     apply: 'build',
     generateBundle(_options, bundle) {
       for (const item of Object.values(bundle)) {
-        if (item.type !== 'asset' || !item.fileName.endsWith('.css')) continue;
+        if (item.type !== 'asset' || !item.fileName.endsWith('.css')) {continue;}
         const css = typeof item.source === 'string' ? item.source : new TextDecoder().decode(item.source);
         if (css.includes('data:font/')) {
           this.error(`Inlined font (data:font/) found in ${item.fileName}. The CSP rejects it; keep fonts as separate files.`);

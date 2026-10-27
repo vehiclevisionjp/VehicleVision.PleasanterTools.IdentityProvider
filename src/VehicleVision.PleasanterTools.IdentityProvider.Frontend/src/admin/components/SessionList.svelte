@@ -19,8 +19,8 @@
     loading = true;
     error = null;
     const result = await listSessions({ loginId: appliedLoginId, limit: PAGE_SIZE, offset });
-    if (result.ok) sessions = result.value;
-    else error = result.message;
+    if (result.ok) {sessions = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
@@ -47,12 +47,12 @@
       confirmLabel: t('sessions.revoke'),
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {return;}
 
     error = null;
     const result = await revokeSession(session.sessionId);
-    if (result.ok) sessions = sessions.filter((item) => item.sessionId !== session.sessionId);
-    else error = result.message;
+    if (result.ok) {sessions = sessions.filter((item) => item.sessionId !== session.sessionId);}
+    else {error = result.message;}
   }
 </script>
 

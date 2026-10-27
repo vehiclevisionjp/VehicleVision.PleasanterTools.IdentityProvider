@@ -24,7 +24,7 @@ const LOCALES: Record<Language, string> = {
 
 /** 言語タグを本アプリの言語コードへ寄せる。対応していなければ `null`。地域は見ない。 */
 export function normalizeLanguage(languageTag: string | null | undefined): Language | null {
-  if (!languageTag) return null;
+  if (!languageTag) {return null;}
   const primary = languageTag.trim().split(/[-_]/)[0]?.toLowerCase() ?? '';
   return SUPPORTED_LANGUAGES.find((language) => language === primary) ?? null;
 }
@@ -38,18 +38,18 @@ export function negotiateLanguage(
   browserLanguages: readonly string[] = [],
 ): Language {
   const explicit = normalizeLanguage(requested);
-  if (explicit) return explicit;
+  if (explicit) {return explicit;}
 
   for (const candidate of browserLanguages) {
     const language = normalizeLanguage(candidate);
-    if (language) return language;
+    if (language) {return language;}
   }
   return DEFAULT_LANGUAGE;
 }
 
 /** ブラウザが申告している言語。 */
 export function browserLanguages(): readonly string[] {
-  if (typeof navigator === 'undefined') return [];
+  if (typeof navigator === 'undefined') {return [];}
   return navigator.languages ?? (navigator.language ? [navigator.language] : []);
 }
 
@@ -86,9 +86,9 @@ export function formatNumber(value: number, language: Language): string {
 
 /** 日時を言語に合わせて書く。**端末のタイムゾーンで出す。** 読めない値はそのまま返す。 */
 export function formatDateTime(value: string | Date | null | undefined, language: Language): string {
-  if (value === null || value === undefined || value === '') return '—';
+  if (value === null || value === undefined || value === '') {return '—';}
   const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return String(value);
+  if (Number.isNaN(date.getTime())) {return String(value);}
   return new Intl.DateTimeFormat(LOCALES[language], {
     dateStyle: 'medium',
     timeStyle: 'medium',
@@ -101,11 +101,11 @@ export function interpolate(
   parameters: Record<string, string | number> | undefined,
   language: Language,
 ): string {
-  if (!parameters) return template;
+  if (!parameters) {return template;}
 
   return template.replace(/\{(\w+)\}/g, (match, name: string) => {
     const value = parameters[name];
-    if (value === undefined) return match;
+    if (value === undefined) {return match;}
     return typeof value === 'number' ? formatNumber(value, language) : value;
   });
 }

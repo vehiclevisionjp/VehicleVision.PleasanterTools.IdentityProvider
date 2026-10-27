@@ -301,6 +301,12 @@ jobs:
             exit 1
           fi
 
+          reference_entries="$(find "$publish_dir" \( -name _reference -o -name .git -o -name .gitmodules \) -print)"
+          if [ -n "$reference_entries" ]; then
+            echo "NG: 配置用 ZIP に参照ソースまたは Git メタデータが混入している: $reference_entries" >&2
+            exit 1
+          fi
+
           # Dockerfile と同じ構成にする。資格情報の実値は含めず、設定の説明と
           # ライセンスだけを足す。ZIP の直下がそのまま wwwroot になる形にする。
           cp -a App_Data "$publish_dir/App_Data"

@@ -176,7 +176,7 @@ describe('validateOidcForm', () => {
       'create',
     );
     expect(result.ok).toBe(false);
-    if (result.ok) return;
+    if (result.ok) {return;}
     expect(Object.keys(result.errors).sort()).toEqual(
       [
         'accessTokenLifetimeSeconds',
@@ -279,7 +279,7 @@ describe('SAML', () => {
       requireSignedRequests: true,
     });
     expect(result.ok).toBe(false);
-    if (result.ok) return;
+    if (result.ok) {return;}
     expect(result.errors.entityId?.key).toBe('validation.required');
     expect(result.errors.displayName?.key).toBe('validation.required');
     expect(result.errors.acsUrl?.key).toBe('validation.url');

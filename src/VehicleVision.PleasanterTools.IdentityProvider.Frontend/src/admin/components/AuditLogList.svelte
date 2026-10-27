@@ -23,8 +23,8 @@
     loading = true;
     error = null;
     const result = await listAuditLogs(buildAuditQuery(applied, page));
-    if (result.ok) logs = result.value;
-    else error = result.message;
+    if (result.ok) {logs = result.value;}
+    else {error = result.message;}
     loading = false;
   }
 
