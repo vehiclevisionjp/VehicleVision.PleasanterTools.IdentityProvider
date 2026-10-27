@@ -84,7 +84,6 @@ dotnet VehicleVision.PleasanterTools.IdentityProvider.Web.dll
 ```bash
 git clone https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.IdentityProvider.git
 cd VehicleVision.PleasanterTools.IdentityProvider
-git submodule update --init --recursive
 ```
 
 ### 開発環境は Docker で完結する
@@ -160,7 +159,7 @@ src/
   …Frontend/      管理画面（Svelte）。成果物は …Web/wwwroot へ出る
 tests/            Core.Tests / Web.Tests / Integration.Tests
 _documents/       仕様・方針・運用手順書
-_reference/       Pleasanter 本体（AGPL）。事実確認のための参照専用のサブモジュール
+_reference/       Pleasanter 本体（AGPL）。必要時に取得する非追跡の参照専用ソースと取得説明
 App_Data/Parameters/  設定ファイルの既定値
 ```
 
