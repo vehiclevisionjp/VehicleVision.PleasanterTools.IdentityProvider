@@ -317,7 +317,7 @@ jobs:
           required=(
             VehicleVision.PleasanterTools.IdentityProvider.Web.dll
             web.config
-            wwwroot/index.html
+            wwwroot/admin.html
             App_Data/Parameters/README.md
             LICENSE
             LICENSING.md
