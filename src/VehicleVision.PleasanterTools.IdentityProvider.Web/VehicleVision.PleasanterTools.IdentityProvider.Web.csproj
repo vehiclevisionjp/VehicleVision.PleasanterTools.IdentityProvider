@@ -39,6 +39,8 @@
   <ItemGroup>
     <!-- DB の基盤は Core.Data（NuGet）へ集約した。名前空間を暗黙に使えるようにする -->
     <Using Include="VehicleVision.PleasanterTools.Core.Data" />
+    <!-- Core.Data 0.1.0 が同名の型を持つため、本アプリの MigrationCommand を別名で明示する（暗黙の using との曖昧さを避ける） -->
+    <Using Include="VehicleVision.PleasanterTools.IdentityProvider.Web.MigrationCommand" Alias="MigrationCommand" />
   </ItemGroup>
 
 </Project>
