@@ -32,9 +32,11 @@ Claude Code は `applyTo` を自動で解釈しないため、自分で開く必
 
 ## 共有メモリリポジトリ
 
-このリポジトリで作業して得た知見は、
-[VehicleVision.PleasanterTools.IdentityProvider.ClaudeMemory](https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.IdentityProvider.ClaudeMemory)
-（internal）で共有します。作業ツリーはハーネスのメモリディレクトリそのものです。
+このリポジトリで作業して得た知見は、internal リポジトリ
+[VehicleVision.PleasanterTools.ClaudeMemory](https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.ClaudeMemory)
+の `IdentityProvider/` フォルダで共有します（ツールごとにリポジトリは分けず、ツール名のフォルダで分けます）。
+**そのリポジトリを 1 か所だけ clone し**、ハーネスのメモリディレクトリは、
+その `IdentityProvider/` フォルダへの Windows ジャンクションです。運用の詳細は同リポジトリの README.md を読んでください。
 
 ```text
 ~/.claude/projects/D--repos-VehicleVision-PleasanterTools-IdentityProvider/memory/
