@@ -39,6 +39,9 @@ temp/
 ## 追跡されないと各人の手元にしか存在しない（.claude/README.md）
 .claude/worktrees/
 
+## git worktree の作業ツリー置き場（ブランチ運用方針.md）
+.worktrees/
+
 ## Claude Code の個人設定（settings.json のローカル上書き）
 .claude/settings.local.json
 
