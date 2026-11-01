@@ -112,11 +112,17 @@ describe('ユーザ照会の読み解き', () => {
 describe('テーマ', () => {
   it('保存値の解釈と解決', () => {
     expect(parseThemePreference('dark')).toBe('dark');
-    expect(parseThemePreference('x')).toBe('system');
-    expect(parseThemePreference(null)).toBe('system');
-    expect(resolveTheme('system', true)).toBe('dark');
-    expect(resolveTheme('system', false)).toBe('light');
+    expect(parseThemePreference('light')).toBe('light');
+    expect(parseThemePreference('auto')).toBe('auto');
+    // 旧版の「OS に合わせる」は、選んだ値として引き継ぐ
+    expect(parseThemePreference('system')).toBe('auto');
+    // 既定はライト（OS には自動で従わない）
+    expect(parseThemePreference('x')).toBe('light');
+    expect(parseThemePreference(null)).toBe('light');
+    expect(resolveTheme('auto', true)).toBe('dark');
+    expect(resolveTheme('auto', false)).toBe('light');
     expect(resolveTheme('light', true)).toBe('light');
+    expect(resolveTheme('dark', false)).toBe('dark');
   });
 });
 

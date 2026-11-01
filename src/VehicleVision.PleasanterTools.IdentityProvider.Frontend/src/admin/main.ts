@@ -1,7 +1,9 @@
-// **書体とアイコンはアプリに同梱している。** 端末の書体に依存させない。
-import '@fontsource-variable/noto-sans-jp';
-import '@fontsource-variable/m-plus-1-code';
+// **配色を先に決める**（ちらつき防止）。書体は同梱しない（端末の書体 → OS の書体。DesignReference の決まり）。
+// アイコン（Material Icons）はアプリに同梱している
+import './lib/themeInit';
 import '@fontsource/material-icons';
+import './design/colors-explicit.css';
+import './design/app-base.css';
 import './styles.scss';
 import { mount } from 'svelte';
 import AdminApp from './AdminApp.svelte';
