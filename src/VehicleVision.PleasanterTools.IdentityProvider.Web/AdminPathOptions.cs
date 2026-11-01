@@ -14,6 +14,8 @@ public sealed partial record AdminPathOptions(string Path)
     {
         "/api",
         "/assets",
+        "/css",
+        "/fonts",
         "/healthz",
         "/idp-assets",
         "/login",

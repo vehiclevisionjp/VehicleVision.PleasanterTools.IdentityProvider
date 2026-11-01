@@ -19,37 +19,73 @@ public static class HtmlPages
 {
     public const string CssPath = "/idp-assets/login.css";
 
+    /// <summary>
+    /// 同梱の書体（DesignReference の <c>app-fonts.css</c>）。管理画面と同じ 1 つを使う。
+    /// フロントエンドの <c>public/css/</c> と <c>public/fonts/app/</c> が <c>wwwroot</c> へそのまま出る
+    /// （組み立て前や配置に無いときは 404 になり、端末の書体で表示される）。
+    /// </summary>
+    public const string FontsCssPath = "/css/app-fonts.css";
+
     public const string PostScriptPath = "/idp-assets/post.js";
 
     /// <summary>SAML の POST バインディングで、フォームを自動送信するための 1 行。</summary>
     public const string PostScript = "document.getElementById('autoPost').submit();\n";
 
+    /// <summary>
+    /// サインイン・二段階認証・サインアウトなどの画面の CSS。
+    /// **基準は VehicleVision.DesignReference 第 2.2 版（コミット 73943fd41880dd1144bae2f3a67a09e7f3bf6e32、参照日 2026-11-01）。**
+    /// 値は <c>css/colors-explicit.css</c>（ライト）と <c>css/app-base.css</c>、部品は <c>components/app-ui.css</c> の複写。
+    /// <para>
+    /// **ライトだけ。** この画面には切り替えが無く、OS の <c>prefers-color-scheme</c> にも自動では従わない
+    /// （明示型の既定。管理画面でダークを選んでも、この画面はライトのまま）。
+    /// </para>
+    /// </summary>
     public const string Css = """
-        :root { color-scheme: light dark; --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280;
-                --border: #d1d5db; --accent: #2563eb; --accent-text: #ffffff; --error: #b91c1c; --error-bg: #fef2f2; }
-        @media (prefers-color-scheme: dark) {
-          :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #475569;
-                  --accent: #60a5fa; --accent-text: #0f172a; --error: #fca5a5; --error-bg: #450a0a; }
-        }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
-               font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif; }
-        main { width: min(26rem, calc(100vw - 2rem)); background: var(--card); border: 1px solid var(--border);
-               border-radius: 0.75rem; padding: 2rem; }
-        h1 { margin: 0 0 1.25rem; font-size: 1.4rem; }
-        p { line-height: 1.6; }
-        label { display: block; margin: 1rem 0 0.35rem; font-weight: 600; }
-        input[type=text], input[type=password] { width: 100%; padding: 0.65rem 0.75rem; font: inherit; color: inherit;
-               background: transparent; border: 1px solid var(--border); border-radius: 0.5rem; }
-        input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-        button, .button { display: inline-block; margin-top: 1.5rem; padding: 0.7rem 1.25rem; font: inherit; font-weight: 600;
-               color: var(--accent-text); background: var(--accent); border: 0; border-radius: 0.5rem; cursor: pointer;
-               text-decoration: none; }
-        button.secondary, .button.secondary { color: var(--text); background: transparent; border: 1px solid var(--border); }
-        .row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .error { margin: 0 0 1rem; padding: 0.75rem 1rem; color: var(--error); background: var(--error-bg); border-radius: 0.5rem; }
-        .muted { color: var(--muted); font-size: 0.9rem; }
-        a { color: var(--accent); }
+        :root { color-scheme: light;
+                --color-primary: #17184b; --color-primary-hover: #0e0f33; --color-primary-subtle: #e9e9f3;
+                --color-primary-text: #17184b; --color-primary-edge: #17184b;
+                --color-text: #0b1013; --color-text-muted: #595857; --color-border: #bdc0ba; --color-border-strong: #85887f;
+                --color-surface: #fffffc; --color-bg: #f3f3f2; --color-on-fill: #ffffff;
+                --color-danger-text: #b7282e; --color-danger-subtle: #fbeaea;
+                --font-sans: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+                --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-xl: 28px;
+                --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+                --radius-md: 8px; --radius-lg: 16px; --shadow-sm: 0 1px 2px rgba(0, 0, 0, .08);
+                --control-h: 40px; --focus-outline: 3px solid var(--color-primary-text); }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: var(--space-4);
+               background: var(--color-bg); color: var(--color-text);
+               font-family: var(--font-sans); font-size: var(--fs-md); line-height: 1.7; }
+        main { width: min(26rem, 100%); background: var(--color-surface); border: 1px solid var(--color-border);
+               border-top: 6px solid var(--color-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+               padding: var(--space-8); }
+        h1 { margin: 0 0 var(--space-4); font-size: 20px; line-height: 1.4; }
+        p { margin: 0 0 var(--space-3); }
+        label { display: block; margin: var(--space-4) 0 var(--space-1); font-size: var(--fs-sm); font-weight: 700; }
+        input[type=text], input[type=password] { width: 100%; min-height: var(--control-h); padding: var(--space-2) var(--space-3);
+               font: inherit; font-size: var(--fs-sm); color: var(--color-text); background: var(--color-surface);
+               border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); }
+        input:hover { border-color: var(--color-text-muted); }
+        input:focus-visible { border-color: var(--color-primary-text); }
+        :focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+        button, .button { display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-h);
+               margin-top: var(--space-6); padding: 0 var(--space-4); font: inherit; font-size: var(--fs-sm); font-weight: 700; line-height: 1.2;
+               color: var(--color-on-fill); background: var(--color-primary); border: 1px solid var(--color-primary-edge);
+               border-radius: var(--radius-md); cursor: pointer; text-decoration: none; white-space: nowrap; }
+        button:hover, .button:hover { background: var(--color-primary-hover); }
+        button.secondary, .button.secondary { color: var(--color-primary-text); background: var(--color-surface); border-color: var(--color-primary-text); }
+        button.secondary:hover, .button.secondary:hover { background: var(--color-primary-subtle); }
+        .row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+        .error { display: flex; gap: var(--space-3); margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4);
+               font-size: var(--fs-sm); color: var(--color-text); background: var(--color-danger-subtle);
+               border: 1px solid var(--color-danger-text); border-left-width: 6px; border-radius: var(--radius-md); }
+        .error::before { content: "\00d7"; flex: none; width: 1.5em; height: 1.5em; display: grid; place-items: center;
+               font-size: var(--fs-sm); font-weight: 700; line-height: 1; color: var(--color-surface);
+               background: var(--color-danger-text); border-radius: 50%; }
+        .muted { color: var(--color-text-muted); font-size: var(--fs-sm); }
+        a { color: var(--color-primary-text); }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
         """;
 
     public static string Login(
@@ -178,7 +214,11 @@ public static class HtmlPages
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex">
+        <meta name="theme-color" content="#17184b">
+        <link rel="icon" href="{Enc(basePath + "/favicon.svg")}" type="image/svg+xml">
+        <link rel="icon" href="{Enc(basePath + "/favicon.ico")}" sizes="any">
         <title>{Enc(title)}</title>
+        <link rel="stylesheet" href="{Enc(basePath + FontsCssPath)}">
         <link rel="stylesheet" href="{Enc(basePath + CssPath)}">
         </head>
         <body>

@@ -33,7 +33,7 @@
 <style lang="scss">
   .status {
     margin-left: 0.4rem;
-    color: var(--muted);
-    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-size: var(--fs-xs);
   }
 </style>

@@ -1,123 +1,135 @@
-// 管理画面の共通スタイル。配色は CSS 変数で持ち、`<html data-theme="dark">` で差し替える。
+// 管理画面の共通スタイル。**基準は VehicleVision.DesignReference（第 2.2 版、Web UI の章）。**
+//
+// - 色・書体・余白・角丸・影は、`design/` の複写（DesignReference の明示型トークンと app-base.css）の
+//   CSS 変数だけで書く。**色コードを直接書かない。**
+// - ライトが既定。`<html data-theme="dark">` のときだけダーク（`lib/theme.ts`）。OS の設定には自動で従わない。
+// - 部品の見た目は DesignReference の `components/app-ui.css`（`vv-` 付き）に合わせる。
+//   既存のクラス名（`button.secondary`、`.badge.ok` など）は変えず、見た目だけを寄せている。
+// - 状態色: 塗りの面は `--color-success` / `--color-warning` / `--color-danger`、
+//   面の上の文字・縁・アイコンは `-text`、淡い面は `-subtle`。蜜柑 `--color-accent` は文字の色にしない。
 
-:root {
-  color-scheme: light;
-  --border: #d0d5dd;
-  --muted: #667085;
-  --error: #b42318;
-  --accent: #175cd3;
-  --bg: #f9fafb;
-  --text: #101828;
-  --surface: #fff;
-  --accent-text: #fff;
-  --success: #067647;
-  --success-surface: #ecfdf3;
-  --warning-text: #7a4b00;
-  --warning-surface: #fff4e5;
-  --warning-border: #f79009;
-  --error-surface: #fef3f2;
-  --disabled-surface: #f2f4f7;
-  --info-surface: #eef4ff;
-  --info-text: #1f2a44;
-  --focus: #175cd3;
-  --font-mono: 'M PLUS 1 Code Variable', ui-monospace, Consolas, monospace;
-}
-
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --border: #4a4f57;
-  --muted: #b0b6c0;
-  --error: #ffb4ab;
-  --accent: #8ab4f8;
-  --bg: #121212;
-  --text: #f1f1f1;
-  --surface: #1e1e1e;
-  --accent-text: #101010;
-  --success: #75d69c;
-  --success-surface: #173528;
-  --warning-text: #ffca80;
-  --warning-surface: #3a2a14;
-  --warning-border: #d59b4a;
-  --error-surface: #3b2020;
-  --disabled-surface: #2c2c2c;
-  --info-surface: #1e2b43;
-  --info-text: #d8e6ff;
-  --focus: #8ab4f8;
-}
-
-* {
-  box-sizing: border-box;
-}
-
+// 書体名とフォーカスリングは app-base.css（`--font-*`、`--focus-outline`）。同梱の書体の実体は public/css/app-fonts.css。ここでは足さない
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Noto Sans JP Variable', system-ui, sans-serif;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 h1 {
-  margin: 0 0 1rem;
-  font-size: 1.4rem;
+  margin: 0 0 var(--space-4);
 }
 
 h2 {
-  margin: 1.5rem 0 0.5rem;
-  font-size: 1.1rem;
+  margin: var(--space-6) 0 var(--space-2);
 }
 
 a {
-  color: var(--accent);
-}
-
-// **フォーカスは必ず見えるようにする。** キーボードだけで操作できること
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
+  color: var(--color-primary-text);
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-primary-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-on-fill);
   font: inherit;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: var(--accent);
-  color: var(--accent-text);
+  font-family: var(--font-heading);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    filter 0.15s;
 
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+
+  // 無効: 色を落として枠だけにする（透過にしない）
   &:disabled {
-    opacity: 0.55;
-    cursor: default;
+    border-color: var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    filter: none;
+    cursor: not-allowed;
   }
 
   &.secondary {
-    background: var(--surface);
-    color: var(--accent);
+    border-color: var(--color-primary-text);
+    background: var(--color-surface);
+    color: var(--color-primary-text);
+
+    &:hover {
+      background: var(--color-primary-subtle);
+    }
+
+    &:disabled {
+      border-color: var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text-muted);
+    }
   }
 
   &.danger {
-    border-color: var(--error);
-    background: var(--error);
-    color: var(--surface);
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+    color: var(--color-on-fill);
+
+    &:hover {
+      background: var(--color-danger);
+      filter: brightness(0.9);
+    }
+
+    &:disabled {
+      border-color: var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text-muted);
+      filter: none;
+    }
   }
 
   &.secondary.danger {
-    background: var(--surface);
-    color: var(--error);
+    border-color: var(--color-danger-text);
+    background: var(--color-surface);
+    color: var(--color-danger-text);
+
+    &:hover {
+      background: var(--color-danger-subtle);
+      filter: none;
+    }
+
+    &:disabled {
+      border-color: var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text-muted);
+    }
   }
 
   &.small {
-    padding: 0.15rem 0.6rem;
-    font-size: 0.85rem;
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: var(--fs-xs);
   }
 
   &.link {
+    min-height: 0;
     padding: 0;
     border: 0;
     background: none;
-    color: var(--accent);
+    color: var(--color-primary-text);
+    font-weight: 400;
     text-decoration: underline;
+
+    &:hover {
+      background: none;
+    }
   }
 }
 
@@ -134,24 +146,15 @@ button {
   -webkit-font-smoothing: antialiased;
 }
 
-// **読み上げには残す。** 目で見れば分かるが、耳では分からない
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+// `.visually-hidden`（読み上げには残す）は app-base.css
 
 .muted {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
+// ID・URL・鍵など、桁をそろえて読むもの（コード用の書体）
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   word-break: break-all;
 }
 
@@ -159,8 +162,8 @@ button {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 
   .spacer {
     flex: 1;
@@ -172,19 +175,20 @@ button {
 label.field,
 .field {
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 
   > .label {
     display: block;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
+    margin-bottom: var(--space-1);
+    font-size: var(--fs-sm);
+    font-weight: 700;
   }
 
   .hint {
     display: block;
-    margin-top: 0.25rem;
-    color: var(--muted);
-    font-size: 0.85rem;
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--fs-xs);
   }
 }
 
@@ -197,87 +201,165 @@ select,
 textarea {
   width: 100%;
   max-width: 40rem;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
+  min-height: var(--control-h);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
   font: inherit;
+  font-size: var(--fs-sm);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+  }
+
+  &:hover {
+    border-color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    border-color: var(--color-primary-text);
+  }
 
   &[aria-invalid='true'] {
-    border-color: var(--error);
+    border-color: var(--color-danger-text);
+    box-shadow: 0 0 0 1px var(--color-danger-text);
+  }
+
+  &:disabled {
+    border-color: var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
   }
 }
 
 textarea {
-  min-height: 6rem;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
+  min-height: 96px;
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
+  resize: vertical;
 }
 
+// 記号 + 文言。色だけで伝えない（エラーの文言は画面側が持つ）
 .error-text {
   display: block;
-  margin-top: 0.25rem;
-  color: var(--error);
-  font-size: 0.9rem;
+  margin-top: var(--space-1);
+  color: var(--color-danger-text);
+  font-size: var(--fs-sm);
 }
 
 fieldset {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 
   legend {
-    padding: 0 0.4rem;
-    font-weight: 600;
+    padding: 0 var(--space-2);
+    font-size: var(--fs-sm);
+    font-weight: 700;
   }
 }
 
 .check {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-sm);
+  cursor: pointer;
 
   input {
-    width: 1.1rem;
-    height: 1.1rem;
+    appearance: none;
+    position: relative;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 2px 0 0;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+
+    &:checked {
+      border-color: var(--color-primary-text);
+      background: var(--color-primary-text);
+    }
+
+    &[type='radio'] {
+      border-radius: 50%;
+
+      &:checked {
+        box-shadow: inset 0 0 0 3px var(--color-surface);
+      }
+    }
+
+    &[type='checkbox']:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 5px;
+      width: 5px;
+      height: 10px;
+      border: solid var(--color-surface);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    &:disabled {
+      border-color: var(--color-border);
+      cursor: not-allowed;
+    }
   }
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 
 // ---- 表・カード・帯 ----
 
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  font-size: var(--fs-sm);
 
   th,
   td {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-3);
     text-align: left;
     vertical-align: top;
   }
 
+  td {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  // 見出し行は鉄紺・白文字
   th {
-    background: var(--disabled-surface);
-    font-size: 0.85rem;
+    border-bottom: 1px solid var(--color-primary-edge);
+    background: var(--color-primary);
+    color: var(--color-on-fill);
+    font-family: var(--font-heading);
+    font-weight: 700;
     white-space: nowrap;
+  }
+
+  tbody tr:hover {
+    background: var(--color-bg);
   }
 
   tr:last-child td {
@@ -287,16 +369,17 @@ table {
   .row-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: var(--space-2);
   }
 }
 
 .card {
-  margin-bottom: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  margin-bottom: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 
   h2 {
     margin-top: 0;
@@ -306,11 +389,11 @@ table {
 dl.kv {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 0.35rem 1rem;
+  gap: var(--space-1) var(--space-4);
   margin: 0;
 
   dt {
-    color: var(--muted);
+    color: var(--color-text-muted);
   }
 
   dd {
@@ -319,106 +402,136 @@ dl.kv {
   }
 }
 
-// 色だけに頼らず、必ず文字（と印）を添える
+// 色だけに頼らず、必ず文字（と印）を添える。塗りの面には `--color-on-fill` の文字
 .badge {
-  display: inline-block;
-  padding: 0 0.5rem;
-  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
   border-radius: 999px;
-  background: var(--disabled-surface);
-  font-size: 0.8rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.7;
   white-space: nowrap;
 
   &.ok {
-    border-color: var(--success);
-    background: var(--success-surface);
-    color: var(--success);
+    border-color: transparent;
+    background: var(--color-success);
+    color: var(--color-on-fill);
   }
 
   &.warn {
-    border-color: var(--warning-border);
-    background: var(--warning-surface);
-    color: var(--warning-text);
+    border-color: transparent;
+    background: var(--color-warning);
+    color: var(--color-on-warning);
   }
 
   &.error {
-    border-color: var(--error);
-    background: var(--error-surface);
-    color: var(--error);
+    border-color: transparent;
+    background: var(--color-danger);
+    color: var(--color-on-fill);
   }
 
   &.info {
-    border-color: var(--accent);
-    background: var(--info-surface);
-    color: var(--info-text);
+    border-color: var(--color-primary-edge);
+    background: var(--color-primary);
+    color: var(--color-on-fill);
   }
 }
 
+// アラート: 左の太い縁 + 淡い面 + アイコン + 文言（色だけで伝えない）
 .banner {
+  --tone: var(--color-primary-text);
+  --tone-bg: var(--color-primary-subtle);
+
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--tone);
+  border-left-width: 6px;
+  border-radius: var(--radius-md);
+  background: var(--tone-bg);
+  color: var(--color-text);
+
+  .material-icons {
+    color: var(--tone);
+  }
 
   &.error {
-    border-color: var(--error);
-    background: var(--error-surface);
-    color: var(--error);
+    --tone: var(--color-danger-text);
+    --tone-bg: var(--color-danger-subtle);
   }
 
   &.warn {
-    border-color: var(--warning-border);
-    background: var(--warning-surface);
-    color: var(--warning-text);
+    --tone: var(--color-warning-text);
+    --tone-bg: var(--color-warning-subtle);
   }
 
   &.ok {
-    border-color: var(--success);
-    background: var(--success-surface);
-    color: var(--success);
+    --tone: var(--color-success-text);
+    --tone-bg: var(--color-success-subtle);
   }
 
   &.info {
-    border-color: var(--accent);
-    background: var(--info-surface);
-    color: var(--info-text);
+    --tone: var(--color-primary-text);
+    --tone-bg: var(--color-primary-subtle);
   }
 }
 
 pre.code {
   margin: 0;
-  padding: 0.75rem;
+  padding: var(--space-3);
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--disabled-surface);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
   white-space: pre-wrap;
   word-break: break-all;
 }
 
 // ボタンの見た目のリンク（画面遷移は `<a href="#/...">`）
 a.button-link {
-  display: inline-block;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: var(--accent);
-  color: var(--accent-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-primary-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-on-fill);
+  font-family: var(--font-heading);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.2;
   text-decoration: none;
 
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+
   &.secondary {
-    background: var(--surface);
-    color: var(--accent);
+    border-color: var(--color-primary-text);
+    background: var(--color-surface);
+    color: var(--color-primary-text);
+
+    &:hover {
+      background: var(--color-primary-subtle);
+    }
   }
 
   &.small {
-    padding: 0.15rem 0.6rem;
-    font-size: 0.85rem;
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: var(--fs-xs);
   }
 }
 
@@ -426,7 +539,7 @@ a.button-link {
 
 .access-rules {
   .rule-list {
-    margin: 0.5rem 0;
+    margin: var(--space-2) 0;
     padding: 0;
     list-style: none;
 
@@ -434,9 +547,9 @@ a.button-link {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.25rem 0;
-      border-bottom: 1px solid var(--border);
+      gap: var(--space-2);
+      padding: var(--space-1) 0;
+      border-bottom: 1px solid var(--color-border);
     }
   }
 
@@ -445,8 +558,8 @@ a.button-link {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
 
     select,
     input {

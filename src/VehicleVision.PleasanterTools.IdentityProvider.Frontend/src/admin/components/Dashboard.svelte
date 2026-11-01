@@ -155,13 +155,13 @@
   }
 
   .error-line {
-    color: var(--error);
+    color: var(--color-danger-text);
     word-break: break-word;
   }
 
   .version {
     margin-top: 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-family: var(--font-code);
+    font-size: var(--fs-sm);
   }
 </style>
