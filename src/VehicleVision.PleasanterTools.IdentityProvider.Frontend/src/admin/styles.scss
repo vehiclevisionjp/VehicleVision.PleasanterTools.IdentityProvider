@@ -1,4 +1,4 @@
-// 管理画面の共通スタイル。**基準は VehicleVision.DesignReference（第 2.2 版、Web UI の章）。**
+// 管理画面の共通スタイル。**基準は VehicleVision.DesignReference（第 2.3 版、Web UI の章）。**
 //
 // - 色・書体・余白・角丸・影は、`design/` の複写（DesignReference の明示型トークンと app-base.css）の
 //   CSS 変数だけで書く。**色コードを直接書かない。**
@@ -399,6 +399,16 @@ dl.kv {
   dd {
     margin: 0;
     min-width: 0;
+  }
+
+  // **狭い画面では縦に積む。** 項目名が長いとき（Zen 系は全角の括弧・記号の幅が広い）、
+  // 値の列が枠の外へはみ出すため
+  @media (max-width: 30rem) {
+    grid-template-columns: minmax(0, 1fr);
+
+    dd {
+      margin-bottom: var(--space-2);
+    }
   }
 }
 
