@@ -217,6 +217,8 @@ public static class HtmlPages
         <meta name="theme-color" content="#17184b">
         <link rel="icon" href="{Enc(basePath + "/favicon.svg")}" type="image/svg+xml">
         <link rel="icon" href="{Enc(basePath + "/favicon.ico")}" sizes="any">
+        <link rel="icon" type="image/png" sizes="32x32" href="{Enc(basePath + "/biikurun-icon-32.png")}">
+        <link rel="apple-touch-icon" href="{Enc(basePath + "/biikurun-icon-180.png")}">
         <title>{Enc(title)}</title>
         <link rel="stylesheet" href="{Enc(basePath + FontsCssPath)}">
         <link rel="stylesheet" href="{Enc(basePath + CssPath)}">
