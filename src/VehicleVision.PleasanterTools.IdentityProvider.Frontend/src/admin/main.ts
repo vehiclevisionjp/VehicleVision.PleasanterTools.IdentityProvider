@@ -1,5 +1,5 @@
 // **配色を先に決める**（ちらつき防止）。書体（Zen Kaku Gothic New・Zen Maru Gothic・Myrica M）は admin.html の `/css/app-fonts.css` で同梱している
-// （DesignReference 第 2.3 版。複写は scripts/fonts/sync-app-fonts.mjs）。アイコン（Material Icons）もアプリに同梱している
+// （DesignReference 第 2.4 版。複写は scripts/fonts/sync-app-fonts.mjs）。アイコン（Material Icons）もアプリに同梱している
 import './lib/themeInit';
 import '@fontsource/material-icons';
 import './design/colors-explicit.css';
