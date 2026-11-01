@@ -88,7 +88,7 @@ Pleasanter の本体プロセスとは通信しません（Pleasanter の DB へ
 `packages.lock.json` を置いているリポジトリでは、推移的依存と実際の版もそこで確認できます。
 
 <!-- license:begin deps-note=free -->
-同梱する書体（Noto Sans CJK JP・Noto Sans Mono CJK JP・Myrica M）とアイコンフォント（Material Icons）のみ SIL OFL 1.1 です
+同梱する書体（Zen Kaku Gothic New・Zen Maru Gothic・Myrica M）とアイコンフォント（Material Icons）のみ SIL OFL 1.1 です
 （Myrica M は M+ FONTS LICENSE も伴います。
 一覧は `NOTICE`、書体の全文は配布物の `fonts/app/licenses/`）。
 <!-- license:end deps-note -->

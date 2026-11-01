@@ -33,7 +33,7 @@ public static class HtmlPages
 
     /// <summary>
     /// サインイン・二段階認証・サインアウトなどの画面の CSS。
-    /// **基準は VehicleVision.DesignReference 第 2.2 版（コミット 73943fd41880dd1144bae2f3a67a09e7f3bf6e32、参照日 2026-11-01）。**
+    /// **基準は VehicleVision.DesignReference 第 2.3 版（コミット 080f9b395ebcda2d4bc3c4108347421db2a2923a、参照日 2026-11-01）。**
     /// 値は <c>css/colors-explicit.css</c>（ライト）と <c>css/app-base.css</c>、部品は <c>components/app-ui.css</c> の複写。
     /// <para>
     /// **ライトだけ。** この画面には切り替えが無く、OS の <c>prefers-color-scheme</c> にも自動では従わない
@@ -47,7 +47,8 @@ public static class HtmlPages
                 --color-text: #0b1013; --color-text-muted: #595857; --color-border: #bdc0ba; --color-border-strong: #85887f;
                 --color-surface: #fffffc; --color-bg: #f3f3f2; --color-on-fill: #ffffff;
                 --color-danger-text: #b7282e; --color-danger-subtle: #fbeaea;
-                --font-sans: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+                --font-sans: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+                --font-heading: "Zen Maru Gothic", var(--font-sans);
                 --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-xl: 28px;
                 --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
                 --radius-md: 8px; --radius-lg: 16px; --shadow-sm: 0 1px 2px rgba(0, 0, 0, .08);
@@ -60,7 +61,7 @@ public static class HtmlPages
         main { width: min(26rem, 100%); background: var(--color-surface); border: 1px solid var(--color-border);
                border-top: 6px solid var(--color-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
                padding: var(--space-8); }
-        h1 { margin: 0 0 var(--space-4); font-size: 20px; line-height: 1.4; }
+        h1 { margin: 0 0 var(--space-4); font-family: var(--font-heading); font-size: 20px; line-height: 1.4; }
         p { margin: 0 0 var(--space-3); }
         label { display: block; margin: var(--space-4) 0 var(--space-1); font-size: var(--fs-sm); font-weight: 700; }
         input[type=text], input[type=password] { width: 100%; min-height: var(--control-h); padding: var(--space-2) var(--space-3);
@@ -70,7 +71,7 @@ public static class HtmlPages
         input:focus-visible { border-color: var(--color-primary-text); }
         :focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
         button, .button { display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-h);
-               margin-top: var(--space-6); padding: 0 var(--space-4); font: inherit; font-size: var(--fs-sm); font-weight: 700; line-height: 1.2;
+               margin-top: var(--space-6); padding: 0 var(--space-4); font: inherit; font-family: var(--font-heading); font-size: var(--fs-sm); font-weight: 700; line-height: 1.2;
                color: var(--color-on-fill); background: var(--color-primary); border: 1px solid var(--color-primary-edge);
                border-radius: var(--radius-md); cursor: pointer; text-decoration: none; white-space: nowrap; }
         button:hover, .button:hover { background: var(--color-primary-hover); }
