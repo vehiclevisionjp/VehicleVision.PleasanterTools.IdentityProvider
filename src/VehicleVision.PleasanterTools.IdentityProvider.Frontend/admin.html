@@ -8,6 +8,11 @@
     <!-- **配置先のサブパスと管理画面の入口。** サーバが配信時に差し替える（HtmlShell.cs） -->
     <meta name="idp-base-path" content="__IDP_BASE_PATH__" />
     <meta name="idp-admin-path" content="__IDP_ADMIN_PATH__" />
+    <!-- **ヘッダー（鉄紺）の色。ライト・ダークとも同じ。** meta では CSS 変数が使えないため値を直接書く（DesignReference の `--color-primary`） -->
+    <meta name="theme-color" content="#17184b" />
+    <!-- ファビコンは DesignReference のもの（`public/`。複写元と版は `src/admin/design/` の注記と同じ） -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <title>IdP 管理</title>
   </head>
   <body>
