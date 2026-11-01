@@ -88,7 +88,7 @@ Pleasanter の本体プロセスとは通信しません（Pleasanter の DB へ
 `packages.lock.json` を置いているリポジトリでは、推移的依存と実際の版もそこで確認できます。
 
 <!-- license:begin deps-note=free -->
-同梱するアイコンフォント（Material Icons）のみ SIL OFL 1.1 です（一覧は `NOTICE`）。画面の書体は同梱せず、端末の書体を使います。
+同梱する書体（Noto Sans CJK JP・Noto Sans Mono CJK JP・Myrica M）とアイコンフォント（Material Icons）のみ SIL OFL 1.1 です（Myrica M は M+ FONTS LICENSE も伴います。一覧は `NOTICE`、書体の全文は配布物の `fonts/app/licenses/`）。
 <!-- license:end deps-note -->
 
 これは意図的な制約です。**コピーレフト系（GPL / AGPL / SSPL 等）の依存が 1 つでも入ると、

@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
 --------------------------------------------------------------------------------
 
 本ソフトウェアが利用する OSS は、すべて寛容ライセンス（MIT / BSD 系 / Apache-2.0）に
-限定しています（書体のみ SIL OFL 1.1 を認める。copilot-instructions.md の規約 7）。
+限定しています（書体とアイコンフォントのみ SIL OFL 1.1 を認める。copilot-instructions.md の規約 7）。
 コピーレフト系（GPL / AGPL / SSPL 等）の依存が 1 つでも入ると、
 商用ライセンスでの提供ができなくなります。
 
@@ -50,7 +50,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
   System.Security.Cryptography.Xml 10.0.14 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Xml
     （ITfoxtec.Identity.Saml2 が推移的に伴う。テストプロジェクトのみ脆弱性の修正版へ固定している）
 
-フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体のみ。**
+フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体・アイコンのみ。**
 残りはビルド時だけ使う）
 
   svelte 5.57.3 / MIT / https://www.npmjs.com/package/svelte
@@ -64,8 +64,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
   typescript-eslint 8.72.1 / MIT
   eslint-plugin-svelte 3.23.1 / MIT
 
-同梱するアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない。
-書体は同梱しない。端末の書体を使う: VehicleVision.DesignReference の Web UI の決まり）
+同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
+
+  Noto Sans CJK JP（Regular・Bold）/ SIL Open Font License 1.1 / https://github.com/notofonts/noto-cjk
+  Noto Sans Mono CJK JP（Regular。ASCII のみ）/ SIL Open Font License 1.1 / https://github.com/notofonts/noto-cjk
+    （上の 2 つは Noto Sans CJK の一部。著作権は Adobe・Google ほか。woff2 へ変換し、使う文字だけに絞っている。
+      書体名・著作権の記録は元のまま。ライセンス全文は fonts/app/licenses/NotoCJK-OFL.txt）
+  Myrica M / SIL Open Font License 1.1 と M+ FONTS LICENSE / https://myrica.estable.jp/
+    （コード・ID・URL・鍵の表示に使う。複数のフォントを合成した書体で、M+ FONTS（M+ FONTS PROJECT）を含む。
+      woff2 へ変換し、使う文字だけに絞っている。ライセンス全文と作者の表記は fonts/app/licenses/Myrica-*）
+    これらは VehicleVision.DesignReference 第 2.2 版（73943fd41880dd1144bae2f3a67a09e7f3bf6e32）の
+    fonts/app/ を scripts/fonts/sync-app-fonts.mjs で複写したもの。出どころは
+    src/VehicleVision.PleasanterTools.IdentityProvider.Frontend/public/fonts/app/SOURCE.json。
+    配布物の wwwroot/fonts/app/ にライセンス全文（licenses/）ごと入る
 
   @fontsource/material-icons 5.3.0 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource/material-icons
     （Material Icons。**上流（google/material-design-icons）は Apache-2.0** だが、

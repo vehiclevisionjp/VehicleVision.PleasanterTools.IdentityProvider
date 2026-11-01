@@ -19,6 +19,13 @@ public static class HtmlPages
 {
     public const string CssPath = "/idp-assets/login.css";
 
+    /// <summary>
+    /// 同梱の書体（DesignReference の <c>app-fonts.css</c>）。管理画面と同じ 1 つを使う。
+    /// フロントエンドの <c>public/css/</c> と <c>public/fonts/app/</c> が <c>wwwroot</c> へそのまま出る
+    /// （組み立て前や配置に無いときは 404 になり、端末の書体で表示される）。
+    /// </summary>
+    public const string FontsCssPath = "/css/app-fonts.css";
+
     public const string PostScriptPath = "/idp-assets/post.js";
 
     /// <summary>SAML の POST バインディングで、フォームを自動送信するための 1 行。</summary>
@@ -26,7 +33,7 @@ public static class HtmlPages
 
     /// <summary>
     /// サインイン・二段階認証・サインアウトなどの画面の CSS。
-    /// **基準は VehicleVision.DesignReference 第 2.1 版（コミット 7c60bae350a9039ac729c204144b2e6855cdcf6c、参照日 2026-11-01）。**
+    /// **基準は VehicleVision.DesignReference 第 2.2 版（コミット 73943fd41880dd1144bae2f3a67a09e7f3bf6e32、参照日 2026-11-01）。**
     /// 値は <c>css/colors-explicit.css</c>（ライト）と <c>css/app-base.css</c>、部品は <c>components/app-ui.css</c> の複写。
     /// <para>
     /// **ライトだけ。** この画面には切り替えが無く、OS の <c>prefers-color-scheme</c> にも自動では従わない
@@ -211,6 +218,7 @@ public static class HtmlPages
         <link rel="icon" href="{Enc(basePath + "/favicon.svg")}" type="image/svg+xml">
         <link rel="icon" href="{Enc(basePath + "/favicon.ico")}" sizes="any">
         <title>{Enc(title)}</title>
+        <link rel="stylesheet" href="{Enc(basePath + FontsCssPath)}">
         <link rel="stylesheet" href="{Enc(basePath + CssPath)}">
         </head>
         <body>

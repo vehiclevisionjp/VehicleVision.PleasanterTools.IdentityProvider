@@ -1,11 +1,12 @@
-/* VehicleVision.DesignReference 第 2.1 版(2026-11-01) コミット 7c60bae350a9039ac729c204144b2e6855cdcf6c の css/app-base.css を、そのまま複写(参照日 2026-11-01)。
+/* VehicleVision.DesignReference 第 2.2 版(2026-11-01) コミット 73943fd41880dd1144bae2f3a67a09e7f3bf6e32 の css/app-base.css を、そのまま複写(参照日 2026-11-01)。
    **手で直さない。** 直すときは DesignReference へ PR を出し、複写し直す。 */
 /* VehicleVision DesignReference: アプリ(Web UI・管理画面)の基本スタイル。コピーして使う 1 ファイル。
    - 色は含めない。先に色のトークンを読み込む(アプリは css/colors-explicit.css(明示型)、サイト・公開物は css/colors.css(追従型))。
-   - 書体は同梱できない(アプリは端末の書体を使う)ので、Noto 系 → OS の書体の順にフォールバックする。
-     書体を同梱できる Web サイトは、このファイルの書体ではなく css/tokens.css と css/webfonts.css を使う。
+   - 書体は同梱する(css/app-fonts.css と fonts/app/。見た目を端末によらず統一する)。このファイルは書体名の候補だけを持ち、
+     同梱の書体が読み込めない・同梱の範囲にない字は、Noto 系 → OS の書体の順にフォールバックする。
+     アプリの書体は css/app-fonts.css(文字を絞った区画)。サイト・公開物は css/tokens.css と css/webfonts.css(全文字)。
    - 値は css/tokens.css と同じ(食い違うと scripts/build-tokens.mjs が失敗する)。書体は、tokens.css の候補に OS の書体を足している。
-   読み込み順: colors-explicit.css → app-base.css → components/app-ui.css(部品を使うとき) */
+   読み込み順: colors-explicit.css → app-base.css → app-fonts.css → components/app-ui.css(部品を使うとき) */
 :root {
   /* 書体: Noto Sans CJK JP → (Google 版の名前) → macOS → Windows → OS 標準 */
   --font-sans: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;      /* 本文 */

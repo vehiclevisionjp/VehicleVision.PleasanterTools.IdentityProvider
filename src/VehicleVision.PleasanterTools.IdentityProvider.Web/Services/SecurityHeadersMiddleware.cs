@@ -3,7 +3,7 @@ namespace VehicleVision.PleasanterTools.IdentityProvider.Web.Services;
 /// <summary>セキュリティヘッダと、キャッシュの禁止を付ける。</summary>
 /// <remarks>
 /// <para>
-/// **CSP は厳しい固定値。** この IdP は外部のスクリプト・画像・フォントを読まない。
+/// **CSP は厳しい固定値。** この IdP は外部のスクリプト・画像・フォントを読まない（書体は同梱で <c>font-src 'self'</c>）。
 /// ログインと管理画面は同じ origin の資産だけで動く。クリックジャッキングを避けるため
 /// <c>frame-ancestors 'none'</c>（ログイン画面を他所の frame に入れさせない）。
 /// </para>
@@ -16,7 +16,7 @@ namespace VehicleVision.PleasanterTools.IdentityProvider.Web.Services;
 public sealed class SecurityHeadersMiddleware(RequestDelegate next)
 {
     public const string ContentSecurityPolicy =
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; "
         + "base-uri 'self'; object-src 'none'; frame-ancestors 'none'";
 
     public async Task InvokeAsync(HttpContext context)

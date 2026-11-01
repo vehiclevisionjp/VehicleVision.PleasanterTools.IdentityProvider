@@ -1,4 +1,4 @@
-// 管理画面の共通スタイル。**基準は VehicleVision.DesignReference（第 2.1 版、Web UI の章）。**
+// 管理画面の共通スタイル。**基準は VehicleVision.DesignReference（第 2.2 版、Web UI の章）。**
 //
 // - 色・書体・余白・角丸・影は、`design/` の複写（DesignReference の明示型トークンと app-base.css）の
 //   CSS 変数だけで書く。**色コードを直接書かない。**
@@ -8,7 +8,7 @@
 // - 状態色: 塗りの面は `--color-success` / `--color-warning` / `--color-danger`、
 //   面の上の文字・縁・アイコンは `-text`、淡い面は `-subtle`。蜜柑 `--color-accent` は文字の色にしない。
 
-// 書体とフォーカスリングは app-base.css（`--font-*`、`--focus-outline`）。ここでは足さない
+// 書体名とフォーカスリングは app-base.css（`--font-*`、`--focus-outline`）。同梱の書体の実体は public/css/app-fonts.css。ここでは足さない
 body {
   line-height: 1.7;
 }
