@@ -1,4 +1,4 @@
-/* VehicleVision.DesignReference 第 2.3 版(2026-11-01) コミット 080f9b395ebcda2d4bc3c4108347421db2a2923a の css/colors-explicit.css を、そのまま複写(参照日 2026-11-01)。
+/* VehicleVision.DesignReference 第 2.4 版(2026-11-01) コミット 0730ea982f56956e724cdc6782b8bfd0827b0e91 の css/colors-explicit.css を、そのまま複写(参照日 2026-11-01)。
    **手で直さない。** 直すときは DesignReference へ PR を出し、複写し直す。 */
 /* 自動生成: tokens/colors.json を編集して `node scripts/build-tokens.mjs` を実行 */
 /* 明示型(アプリ向け): 既定はライト。OS の prefers-color-scheme には従わず、<html data-theme="dark"> のときだけダークにする。

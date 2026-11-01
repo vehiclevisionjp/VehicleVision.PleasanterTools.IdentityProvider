@@ -33,7 +33,7 @@ public static class HtmlPages
 
     /// <summary>
     /// サインイン・二段階認証・サインアウトなどの画面の CSS。
-    /// **基準は VehicleVision.DesignReference 第 2.3 版（コミット 080f9b395ebcda2d4bc3c4108347421db2a2923a、参照日 2026-11-01）。**
+    /// **基準は VehicleVision.DesignReference 第 2.4 版（コミット 0730ea982f56956e724cdc6782b8bfd0827b0e91、参照日 2026-11-01）。**
     /// 値は <c>css/colors-explicit.css</c>（ライト）と <c>css/app-base.css</c>、部品は <c>components/app-ui.css</c> の複写。
     /// <para>
     /// **ライトだけ。** この画面には切り替えが無く、OS の <c>prefers-color-scheme</c> にも自動では従わない

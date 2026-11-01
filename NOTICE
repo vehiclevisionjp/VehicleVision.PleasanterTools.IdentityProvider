@@ -73,7 +73,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
   Myrica M / SIL Open Font License 1.1 と M+ FONTS LICENSE / https://myrica.estable.jp/
     （コード・ID・URL・鍵の表示に使う。複数のフォントを合成した書体で、M+ FONTS（M+ FONTS PROJECT）を含む。
       woff2 へ変換し、使う文字だけに絞っている。ライセンス全文と作者の表記は fonts/app/licenses/Myrica-*）
-    これらは VehicleVision.DesignReference 第 2.3 版（080f9b395ebcda2d4bc3c4108347421db2a2923a）の
+    これらは VehicleVision.DesignReference 第 2.4 版（0730ea982f56956e724cdc6782b8bfd0827b0e91）の
     fonts/app/ を scripts/fonts/sync-app-fonts.mjs で複写したもの。出どころは
     src/VehicleVision.PleasanterTools.IdentityProvider.Frontend/public/fonts/app/SOURCE.json。
     配布物の wwwroot/fonts/app/ にライセンス全文（licenses/）ごと入る
