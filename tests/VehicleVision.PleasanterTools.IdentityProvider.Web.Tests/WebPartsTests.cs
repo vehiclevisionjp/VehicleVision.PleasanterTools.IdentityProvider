@@ -259,6 +259,15 @@ public class HtmlPagesTests
     }
 
     [Fact]
+    public void 同梱の書体のCSSをサブパス込みで読み込み_CSPは自分の起源の書体だけを許す()
+    {
+        var html = HtmlPages.Login("ja", "/idp", "/admin", "t");
+
+        Assert.Contains("href=\"/idp/css/app-fonts.css\"", html, StringComparison.Ordinal);
+        Assert.Contains("font-src 'self'", SecurityHeadersMiddleware.ContentSecurityPolicy, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void インラインのスクリプトとスタイルを含まない()
     {
         var pages = new[]

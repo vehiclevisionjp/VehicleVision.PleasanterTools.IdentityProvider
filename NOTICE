@@ -1,15 +1,14 @@
 VehicleVision.PleasanterTools.IdentityProvider
 Copyright (C) PMC Co., Ltd. IT Solution Div.
-
-本ソフトウェアはデュアルライセンス（AGPL-3.0-or-later OR LicenseRef-PMC-Commercial）で
-提供されます。詳細は LICENSING.md を参照してください。
+SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
+詳細は LICENSING.md を参照してください。
 
 --------------------------------------------------------------------------------
 サードパーティソフトウェア
 --------------------------------------------------------------------------------
 
 本ソフトウェアが利用する OSS は、すべて寛容ライセンス（MIT / BSD 系 / Apache-2.0）に
-限定しています（書体のみ SIL OFL 1.1 を認める。copilot-instructions.md の規約 7）。
+限定しています（書体とアイコンフォントのみ SIL OFL 1.1 を認める。copilot-instructions.md の規約 7）。
 コピーレフト系（GPL / AGPL / SSPL 等）の依存が 1 つでも入ると、
 商用ライセンスでの提供ができなくなります。
 
@@ -17,7 +16,7 @@ Copyright (C) PMC Co., Ltd. IT Solution Div.
 
 名称 / バージョン / ライセンス / 入手元
 
-  VehicleVision.PleasanterTools.Core.Data 0.1.0-preview.11 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
+  VehicleVision.PleasanterTools.Core.Data 0.1.1 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
     （DB の基盤。接続・暗号化検査・DbTime・マイグレーションと排他・SqlDialect の汎用部分。Dapper・FluentMigrator・DB ドライバは、これが推移的に伴う）
   Dapper 2.1.89 / Apache-2.0 / https://www.nuget.org/packages/Dapper
   FluentMigrator 8.0.1 / Apache-2.0 / https://www.nuget.org/packages/FluentMigrator
@@ -35,7 +34,7 @@ Copyright (C) PMC Co., Ltd. IT Solution Div.
       単体での再配布の禁止・保証の否認・責任の制限・輸出規制の遵守など、この許諾と同程度に守る条件へ同意させる／
       アプリの頒布・利用に関する請求から Microsoft を補償する（改変していない SNI だけに基づく請求を除く）。
       **2026-10-20 の決定**: 条件を明記したうえで許容し、「依存は寛容ライセンスに限る」の例外として扱う。
-      上の条件は、LICENSING.md（例外の節）と LICENSE-COMMERCIAL.md（頒布先に守っていただく条件）へ反映した。法務の確認は別途）
+      上の条件は、LICENSING.md（例外の節）と LICENSE-COMMERCIAL.md（頒布先に守っていただく条件）へ反映した）
   Npgsql 10.0.3 / PostgreSQL License（BSD 系の寛容ライセンス） / https://www.nuget.org/packages/Npgsql
   MySqlConnector 2.6.2 / MIT / https://www.nuget.org/packages/MySqlConnector
   Microsoft.Extensions.DependencyInjection 10.0.13 / MIT
@@ -51,7 +50,7 @@ Copyright (C) PMC Co., Ltd. IT Solution Div.
   System.Security.Cryptography.Xml 10.0.14 / MIT / https://www.nuget.org/packages/System.Security.Cryptography.Xml
     （ITfoxtec.Identity.Saml2 が推移的に伴う。テストプロジェクトのみ脆弱性の修正版へ固定している）
 
-フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体のみ。**
+フロントエンド（**成果物へ含まれるのは svelte のランタイムと同梱した書体・アイコンのみ。**
 残りはビルド時だけ使う）
 
   svelte 5.57.3 / MIT / https://www.npmjs.com/package/svelte
@@ -59,18 +58,26 @@ Copyright (C) PMC Co., Ltd. IT Solution Div.
   @sveltejs/vite-plugin-svelte 7.3.1 / MIT
   svelte-check 4.7.7 / MIT
   vitest 5.0.5 / MIT / https://www.npmjs.com/package/vitest
-  sass 1.105.2 / MIT
+  sass 1.107.1 / MIT
   typescript 6.0.3 / Apache-2.0
-  eslint 10.13.0 / MIT
+  eslint 10.14.0 / MIT
   typescript-eslint 8.72.1 / MIT
   eslint-plugin-svelte 3.23.1 / MIT
 
 同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
 
-  @fontsource-variable/noto-sans-jp 5.3.1 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource-variable/noto-sans-jp
-    （Noto Sans JP Variable。unicode-range で分割された woff2）
-  @fontsource-variable/m-plus-1-code 5.3.1 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource-variable/m-plus-1-code
-    （M PLUS 1 Code Variable。日本語も等幅になる。ID・URL・鍵の表示に使う）
+  Zen Kaku Gothic New（Regular・Bold。本文）/ SIL Open Font License 1.1 / https://github.com/googlefonts/zen-kakugothic
+  Zen Maru Gothic（Bold。見出し・UI）/ SIL Open Font License 1.1 / https://github.com/googlefonts/zen-marugothic
+    （著作権は The Zen Kaku Gothic Project Authors・The Zen Maru Gothic Project Authors。woff2 へ変換し、使う文字だけに絞っている。
+      書体名・著作権の記録は元のまま。ライセンス全文は fonts/app/licenses/ZenKakuGothicNew-OFL.txt・ZenMaruGothic-OFL.txt）
+  Myrica M / SIL Open Font License 1.1 と M+ FONTS LICENSE / https://myrica.estable.jp/
+    （コード・ID・URL・鍵の表示に使う。複数のフォントを合成した書体で、M+ FONTS（M+ FONTS PROJECT）を含む。
+      woff2 へ変換し、使う文字だけに絞っている。ライセンス全文と作者の表記は fonts/app/licenses/Myrica-*）
+    これらは VehicleVision.DesignReference 第 2.4 版（0730ea982f56956e724cdc6782b8bfd0827b0e91）の
+    fonts/app/ を scripts/fonts/sync-app-fonts.mjs で複写したもの。出どころは
+    src/VehicleVision.PleasanterTools.IdentityProvider.Frontend/public/fonts/app/SOURCE.json。
+    配布物の wwwroot/fonts/app/ にライセンス全文（licenses/）ごと入る
+
   @fontsource/material-icons 5.3.0 / SIL Open Font License 1.1 / https://www.npmjs.com/package/@fontsource/material-icons
     （Material Icons。**上流（google/material-design-icons）は Apache-2.0** だが、
       npm パッケージは OFL-1.1 を宣言している）

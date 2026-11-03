@@ -22,5 +22,5 @@
     "MD060": false,
   },
   // AGENTS.md は scripts/sync-agents.sh が生成する（直接編集しない）ので検査しない
-  "ignores": ["_reference/**", "AGENTS.md"],
+  "ignores": ["_reference/**", "AGENTS.md", "**/Myrica-README.md"],
 }

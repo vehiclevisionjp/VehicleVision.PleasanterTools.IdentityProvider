@@ -15,6 +15,7 @@
   import { NAV_PAGES, navHash, navPageOf, parseRoute, type NavPage, type Route } from './lib/route';
   import {
     readThemePreference,
+    systemPrefersDark,
     resolveTheme,
     saveThemePreference,
     THEME_PREFERENCES,
@@ -40,7 +41,7 @@
   let error = $state<string | null>(null);
   let route = $state<Route>(parseRoute(location.hash));
   let themePreference = $state<ThemePreference>(readThemePreference());
-  let systemDark = $state(false);
+  let systemDark = $state(systemPrefersDark());
   let main = $state<HTMLElement>();
 
   const navLabels: Record<NavPage, MessageKey> = {
@@ -54,14 +55,14 @@
   };
 
   const themeLabels: Record<ThemePreference, MessageKey> = {
-    system: 'theme.system',
     light: 'theme.light',
     dark: 'theme.dark',
+    auto: 'theme.system',
   };
 
   const currentNav = $derived(navPageOf(route));
 
-  // **配色は `<html data-theme>` へ当てる。** OS の設定の変化にも追従する
+  // **配色は `<html data-theme>` へ当てる。** OS の設定を見るのは「OS に合わせる」を選んだときだけ
   $effect(() => {
     document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
   });
@@ -90,7 +91,6 @@
 
   onMount(() => {
     const query = window.matchMedia('(prefers-color-scheme: dark)');
-    systemDark = query.matches;
     const onScheme = (event: MediaQueryListEvent) => (systemDark = event.matches);
     query.addEventListener('change', onScheme);
 
@@ -206,36 +206,31 @@
 <ConfirmationDialog />
 
 <style lang="scss">
+  // `.skip-link`・`.visually-hidden` は app-base.css
   .shell {
     min-height: 100vh;
   }
 
-  .skip-link {
-    position: absolute;
-    left: 0.5rem;
-    top: -4rem;
-    z-index: 2000;
-    padding: 0.4rem 0.8rem;
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-
-    &:focus {
-      top: 0.5rem;
-    }
-  }
-
+  // ヘッダーは鉄紺・白文字（ライト・ダークとも）
   .top {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem;
-    padding: 0.6rem 1.5rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    gap: var(--space-4);
+    min-height: 56px;
+    padding: var(--space-2) var(--space-6);
+    border-bottom: 1px solid var(--color-primary-edge);
+    background: var(--color-primary);
+    color: var(--color-on-fill);
+
+    // 鉄紺の上は白いリング
+    :global(:focus-visible) {
+      outline-color: var(--color-on-fill);
+    }
   }
 
   .brand {
+    font-family: var(--font-heading);
     font-weight: 700;
   }
 
@@ -243,49 +238,51 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
     margin-left: auto;
   }
 
   .who {
-    color: var(--muted);
-    font-size: 0.9rem;
+    font-size: var(--fs-sm);
   }
 
   .select select {
     width: auto;
-    padding: 0.2rem 0.35rem;
-    font-size: 0.85rem;
+    min-height: 32px;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--fs-xs);
   }
 
   .nav {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
 
     ul {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.25rem;
+      gap: var(--space-1);
       margin: 0;
-      padding: 0 1rem;
+      padding: 0 var(--space-4);
       list-style: none;
     }
 
     a {
       display: block;
-      padding: 0.6rem 0.9rem;
+      margin-bottom: -1px;
+      padding: var(--space-3) var(--space-4);
       border-bottom: 3px solid transparent;
-      color: var(--text);
+      color: var(--color-text-muted);
+      font-size: var(--fs-sm);
       text-decoration: none;
 
       &:hover {
-        background: var(--disabled-surface);
+        color: var(--color-text);
       }
 
-      // 色だけに頼らず、下線の太さでも現在地を示す
+      // 色だけに頼らず、下線の太さと文字の太さでも現在地を示す
       &[aria-current='page'] {
-        border-bottom-color: var(--accent);
-        color: var(--accent);
+        border-bottom-color: var(--color-primary-text);
+        color: var(--color-primary-text);
         font-weight: 700;
       }
     }
@@ -294,7 +291,7 @@
   main {
     max-width: 80rem;
     margin: 0 auto;
-    padding: 1.5rem 1.5rem 4rem;
+    padding: var(--space-6) var(--space-6) var(--space-12);
 
     &:focus {
       outline: none;
@@ -303,9 +300,9 @@
 
   .status {
     max-width: 40rem;
-    margin: 4rem auto;
-    padding: 0 1rem;
-    color: var(--muted);
+    margin: var(--space-12) auto;
+    padding: 0 var(--space-4);
+    color: var(--color-text-muted);
     text-align: center;
   }
 </style>

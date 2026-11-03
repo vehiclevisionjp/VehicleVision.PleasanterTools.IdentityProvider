@@ -166,11 +166,11 @@
   }
 
   .pager {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
   }
 
   summary {
     cursor: pointer;
-    color: var(--accent);
+    color: var(--color-primary-text);
   }
 </style>
