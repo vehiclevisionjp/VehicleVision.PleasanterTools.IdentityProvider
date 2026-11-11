@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
 
 名称 / バージョン / ライセンス / 入手元
 
-  VehicleVision.PleasanterTools.Core.Data 0.1.1 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
+  VehicleVision.PleasanterTools.Core.Data 0.2.0 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
     （DB の基盤。接続・暗号化検査・DbTime・マイグレーションと排他・SqlDialect の汎用部分。Dapper・FluentMigrator・DB ドライバは、これが推移的に伴う）
   Dapper 2.1.89 / Apache-2.0 / https://www.nuget.org/packages/Dapper
   FluentMigrator 8.0.1 / Apache-2.0 / https://www.nuget.org/packages/FluentMigrator
@@ -94,5 +94,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
   Microsoft.NET.Test.Sdk 18.11.0 / MIT
   coverlet.collector 10.1.0 / MIT
   Microsoft.Extensions.TimeProvider.Testing 10.11.0 / MIT
+  VehicleVision.PleasanterTools.Core.Cli.Testing 0.2.0 / AGPL-3.0-or-later または商用（自社。Core リポジトリ） / https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Core
+    （MigrationCommand の CLI の共通仕様の契約テスト用。**テストプロジェクトのみで、成果物・配布物には含まれない。**
+      Core.Cli・Core.Contracts（同じく自社・0.2.0）を推移的に伴う）
 
 **依存を追加したら、ここへ追記してからコミットすること。**

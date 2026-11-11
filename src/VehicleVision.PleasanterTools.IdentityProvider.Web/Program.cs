@@ -78,7 +78,12 @@ ConnectionSecurity.EnsureSecure(
 // **マイグレーションを手動で当てる口も残す。** 当てる道具を別に作らない
 if (MigrationCommand.IsRequested(args))
 {
-    Environment.ExitCode = await MigrationCommand.RunAsync(provider, connectionString, args);
+    Environment.ExitCode = await MigrationCommand.RunAsync(
+        IdentityProviderDatabase.Instance.Migrator,
+        provider,
+        connectionString,
+        args,
+        TimeSpan.FromSeconds(DatabaseStartupMigration.DefaultLockTimeoutSeconds));
     return;
 }
 

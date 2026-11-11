@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
+    <!-- MigrationCommand（Core.Data）の契約テスト用（CLI の共通仕様）。テストプロジェクトのみ -->
+    <PackageReference Include="VehicleVision.PleasanterTools.Core.Cli.Testing" Version="0.2.0" />
     <!-- 時間を進めて、締め出しの解除や有効期限を試すため。MIT -->
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
