@@ -92,5 +92,4 @@ git ls-remote --tags https://github.com/Implem/Implem.Pleasanter.git 'refs/tags/
 検証環境の `implem/pleasanter:1.5.9.0` は参照ソースの同期と独立に維持する。
 DB スキーマ・認証・イメージ更新の妥当性は、別途実ソースと実機の両方で確認する。
 
-本方式の出典（2026-10-27 参照）:
-[Template の配布手順（承認済みコミット）](https://github.com/vehiclevisionjp/VehicleVision.PleasanterTools.Template/blob/3312f003fbe9827090e20bc643800824bdf30e22/_documents/参照ソースのオンデマンド取得への配布手順.md)。
+本方式の出典: 共通の配布手順（2026-10-27 参照、承認済みコミット 3312f003fbe9827090e20bc643800824bdf30e22）。
