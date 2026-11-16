@@ -54,15 +54,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-PMC-Commercial
 残りはビルド時だけ使う）
 
   svelte 5.57.3 / MIT / https://www.npmjs.com/package/svelte
-  vite 8.3.5 / MIT / https://www.npmjs.com/package/vite
+  vite 8.3.8 / MIT / https://www.npmjs.com/package/vite
   @sveltejs/vite-plugin-svelte 7.3.1 / MIT
   svelte-check 4.7.7 / MIT
-  vitest 5.0.5 / MIT / https://www.npmjs.com/package/vitest
-  sass 1.107.1 / MIT
+  vitest 5.1.0 / MIT / https://www.npmjs.com/package/vitest
+  sass 1.108.2 / MIT
   typescript 6.0.3 / Apache-2.0
-  eslint 10.14.0 / MIT
-  typescript-eslint 8.72.1 / MIT
-  eslint-plugin-svelte 3.23.1 / MIT
+  eslint 10.15.0 / MIT
+  typescript-eslint 8.72.2 / MIT
+  eslint-plugin-svelte 3.24.1 / MIT
 
 同梱する書体とアイコン（**成果物に含まれる。** 自前配信なので外部へ要求は出ない）
 
