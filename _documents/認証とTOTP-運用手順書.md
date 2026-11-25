@@ -37,7 +37,7 @@ IdP は Pleasanter の `Users` をそのまま使う。**次の全てを満た�
 共有鍵そのものは見えない）。
 
 ⚠️ `Pleasanter` モードで IdP の `SecondaryAuthentication.Mode` が Pleasanter の設定と食い違うと、
-Pleasanter では求められない人が IdP で求められる（その逆も）。写しなので、**変えるときは両方を揃える。**
+Pleasanter では求められない人が IdP で求められる（その逆も）。コピーなので、**変えるときは両方を揃える。**
 
 ### コードが通らないとき
 

@@ -4,12 +4,12 @@
 **主な想定はローカルで動かす Codex CLI などです。**
 
 GitHub 上のエージェントは `.github/copilot-instructions.md` を直接読みます。
-Claude Code はローカルで `CLAUDE.md` を読み、そこから同じ参照元を取り込みます。
+Claude Code はローカルで `CLAUDE.md` を読み、そこから同じ参照元をインポートします。
 **このファイルが要るのは、AGENTS.md 標準が include の仕組みを規定しておらず、
 規約の本文が無いと届かないためです。**
 
 **規約の全文は [`.github/copilot-instructions.md`](.github/copilot-instructions.md) にあります。
-以下は同ファイルの「必ず守る規約」の写しです。作業前に参照元を必ず開いてください。**
+以下は同ファイルの「必ず守る規約」のコピーです。作業前に参照元を必ず開いてください。**
 
 <!-- この節は .github/copilot-instructions.md から生成される。ここを直接編集しないこと。
      編集は .github/copilot-instructions.md 側で行い、`scripts/sync-agents.sh` を実行する。 -->
@@ -40,4 +40,5 @@ Claude Code はローカルで `CLAUDE.md` を読み、そこから同じ参照�
 8. **Pleasanter の DB 資格情報・IdP の署名鍵をブラウザへ渡さないこと。** 資格情報と鍵はサーバ側だけで保持する
 9. **`{}` を省略しない。** `if` / `else` / `for` / `foreach` / `while` / `using` / `lock` などの本文も、
    1 行で済む場合も同じ。C# は `.editorconfig` とビルドで、TypeScript・Svelte は ESLint の `curly` で強制する。
+10. 用語は、一般に通じるカタカナ語を無理に漢字へ訳さない。「ボタン」を釦と書かず、「プレビュー」「スクリーンショット」「インポート」「エクスポート」を使う（下見・写し・取り込み・書き出しと書かない）。識別子（クラス名・設定名・ファイル名など）は変えない。
 

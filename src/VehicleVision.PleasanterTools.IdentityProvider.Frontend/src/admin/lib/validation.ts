@@ -364,8 +364,8 @@ export function samlFormFromProvider(provider: SamlProvider): SamlFormState {
 }
 
 /**
- * メタデータの取り込み結果（`entityId` `displayName` `acsUrl` `sloUrl` `signingCertificate` だけ埋まる）を、
- * 今の入力へ重ねる。**取り込みが返さない項目（NameID・属性・署名の設定など）は今の入力を残す。**
+ * メタデータのインポート結果（`entityId` `displayName` `acsUrl` `sloUrl` `signingCertificate` だけ埋まる）を、
+ * 今の入力へ重ねる。**インポートが返さない項目（NameID・属性・署名の設定など）は今の入力を残す。**
  */
 export function applyImportedMetadata(form: SamlFormState, imported: SamlProvider): SamlFormState {
   return {
