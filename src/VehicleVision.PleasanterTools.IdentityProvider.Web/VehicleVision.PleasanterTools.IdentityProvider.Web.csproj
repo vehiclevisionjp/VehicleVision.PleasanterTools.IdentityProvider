@@ -2,8 +2,8 @@
 
   <ItemGroup>
     <!-- SAML 2.0 の IdP（メタデータ・AuthnRequest の検証・署名付き Response）。BSD-3-Clause -->
-    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.22.0" />
-    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.22.0" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.22.3" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.22.3" />
     <!-- OIDC の ID トークン・アクセストークン（JWT）の署名。MIT -->
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <!-- 推移的依存（ITfoxtec.Identity.Saml2 経由）の脆弱性の修正版へ固定する -->
