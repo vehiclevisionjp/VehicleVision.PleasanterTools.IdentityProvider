@@ -84,7 +84,7 @@ internal static class TestDatabases
     [
         // Core.Data の共有表（Migrator が IdP の分と一緒に作る。使わない表も作られるので、まとめて落とす）。旧 AuditLogs は M0001 が作る
         "AuditLogs", "Core_AuditLogs", "Core_RateLimits", "Core_AdminInvitations", "Core_AppSettings", "Core_MailOutbox",
-        "Core_AdminRecoveryCodes", "Core_AdminSetup", "Core_AdminSessions", "Core_AdminUsers",
+        "Core_AdminPasskeyChallenges", "Core_AdminPasskeys", "Core_AdminRecoveryCodes", "Core_AdminSetup", "Core_AdminSessions", "Core_AdminUsers",
         "PendingRequests", "TotpUsedSteps", "LoginFailures", "RefreshTokens",
         "AuthorizationCodes", "SessionParticipants", "SsoSessions", "SigningKeys", "SamlProviders", "OidcClients",
     ];
