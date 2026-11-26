@@ -16,9 +16,9 @@ Claude Code の**リポジトリ共有**設定。権限の許可（`allow`）と
 ## エージェント向けの規約はどこにあるか
 
 - [`../.github/copilot-instructions.md`](../.github/copilot-instructions.md) — **規約の単一の参照元。**
-  全文はここにあり、他はここを指すか写しを持つだけ
+  全文はここにあり、他はここを指すかコピーを持つだけ
 - [`../AGENTS.md`](../AGENTS.md) — AGENTS.md 標準を読むエージェント（Codex CLI など）向け。
-  「必ず守る規約」の写しを持つ。**直接編集せず `scripts/sync-agents.sh` で再生成する。**
+  「必ず守る規約」のコピーを持つ。**直接編集せず `scripts/sync-agents.sh` で再生成する。**
   食い違いは CI（`ci.yml` のライセンス検査ジョブ）が `--check` で落とす
 - [`../CLAUDE.md`](../CLAUDE.md) — Claude Code 固有の補足（外部メモリの扱いなど）
 - [`../_documents/ブランチ運用方針.md`](../_documents/ブランチ運用方針.md) — ブランチと作業ツリーの規則

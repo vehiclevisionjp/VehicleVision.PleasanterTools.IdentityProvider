@@ -36,7 +36,7 @@ public sealed class SecretProtector
     /// <summary>設定から受け取った鍵を読む。**書式と長さをここ 1 か所で見る。**</summary>
     /// <remarks>
     /// 同じ設定値は <see cref="SubmissionGuard"/> も使う。
-    /// **鍵の検証を写して持たない。** 片方だけ緩いと、そこから短い鍵が入る。
+    /// **鍵の検証をコピーして持たない。** 片方だけ緩いと、そこから短い鍵が入る。
     /// </remarks>
     public static byte[] DecodeKey(string base64Key)
     {

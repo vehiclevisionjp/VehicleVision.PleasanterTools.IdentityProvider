@@ -287,7 +287,7 @@ describe('SAML', () => {
     expect(result.errors.signingCertificate?.key).toBe('validation.certificate.required');
   });
 
-  it('メタデータの取り込みは返された項目だけを重ね、他は残す', () => {
+  it('メタデータのインポートは返された項目だけを重ね、他は残す', () => {
     const base = { ...valid(), nameIdFormat: 'persistent' as const, signResponse: true };
     const imported = {
       entityId: 'https://new.example.com',
